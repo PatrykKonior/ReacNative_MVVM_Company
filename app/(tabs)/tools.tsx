@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function HomePage() {
+export default function ToolsScreen() {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Welcome to Home Page</Text>
-            <Text style={styles.subtitle}>This will display a modern grid.</Text>
+            <Text style={styles.title}>Tools</Text>
+            <Text style={styles.subtitle}>There will be searching, filtering and sorting.</Text>
         </View>
     );
 }
