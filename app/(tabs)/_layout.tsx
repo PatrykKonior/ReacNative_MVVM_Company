@@ -93,6 +93,8 @@ export default function TabLayout() {
                         ios: { position: 'absolute' },
                         default: {},
                     }),
+                    tabBarActiveTintColor: '#465954',
+                    tabBarInactiveTintColor: '#a1a59b',
                     headerLeft: () => (
                         <TouchableOpacity
                             onPress={toggleMenu}
@@ -148,10 +150,10 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
     menuContainer: {
         position: 'absolute',
-        top: 63, // Startuje pod przyciskiem menu
+        top: 63, // lokalizacja menu - od góry
         left: 0,
         width: SCREEN_WIDTH * 0.2, // Menu na 15% szerokości ekranu
-        backgroundColor: '#e0e0e0', // Nowy odcień tła
+        backgroundColor: '#e0e0e0',
         overflow: 'hidden',
         borderTopRightRadius: 8,
         borderBottomRightRadius: 8,
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     menuButton: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#465954',
         paddingVertical: 10,
         borderRadius: 8,
         marginVertical: 5,
@@ -181,7 +183,7 @@ const styles = StyleSheet.create({
     headerButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#007BFF',
+        backgroundColor: '#465954',
         paddingHorizontal: 15,
         paddingVertical: 10,
         borderRadius: 8,
