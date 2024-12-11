@@ -1,28 +1,33 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-const categories = [
-    { id: '1', title: 'Clients', icon: 'users', iconFamily: FontAwesome5 },
-    { id: '2', title: 'Client Details', icon: 'id-card', iconFamily: FontAwesome5 },
-    { id: '3', title: 'Projects', icon: 'briefcase', iconFamily: FontAwesome5 },
-    { id: '4', title: 'Tasks', icon: 'tasks', iconFamily: FontAwesome5 },
-    { id: '5', title: 'Employees', icon: 'people', iconFamily: MaterialIcons },
-    { id: '6', title: 'Departments', icon: 'building', iconFamily: FontAwesome5 },
-    { id: '7', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5 },
-    { id: '8', title: 'Payments', icon: 'credit-card', iconFamily: FontAwesome5 },
-    { id: '9', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5 },
-    { id: '10', title: 'Project Materials', icon: 'clipboard-list', iconFamily: FontAwesome5 },
-    { id: '11', title: 'Sales', icon: 'shopping-cart', iconFamily: FontAwesome5 },
-    { id: '12', title: 'Sale Items', icon: 'list', iconFamily: FontAwesome5 },
-    { id: '13', title: 'Contracts', icon: 'file-contract', iconFamily: FontAwesome5 },
-    { id: '14', title: 'Expenses', icon: 'wallet', iconFamily: FontAwesome5 },
-    { id: '15', title: 'Time Logs', icon: 'clock', iconFamily: FontAwesome5 },
+type RoutePaths = "/clients" | "/projects" | "/employees" | "/departments" | "/invoices" | "/materials";
+
+const categories: Array<{
+    id: string;
+    title: string;
+    icon: string;
+    iconFamily: any;
+    route: RoutePaths;
+}> = [
+    { id: '1', title: 'Clients', icon: 'users', iconFamily: FontAwesome5, route: '/clients' },
+    { id: '2', title: 'Projects', icon: 'briefcase', iconFamily: FontAwesome5, route: '/projects' },
+    { id: '3', title: 'Employees', icon: 'people', iconFamily: MaterialIcons, route: '/employees' },
+    { id: '4', title: 'Departments', icon: 'building', iconFamily: FontAwesome5, route: '/departments' },
+    { id: '5', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5, route: '/invoices' },
+    { id: '6', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5, route: '/materials' },
 ];
 
 export default function CategoriesScreen() {
-    const renderItem = ({ item }: { item: { id: string; title: string; icon: string; iconFamily: any } }) => (
-        <TouchableOpacity style={styles.categoryItem} onPress={() => alert(`Go to ${item.title}`)}>
+    const router = useRouter();
+
+    const renderItem = ({ item }: { item: typeof categories[0] }) => (
+        <TouchableOpacity
+            style={styles.categoryItem}
+            onPress={() => router.push(item.route)}
+        >
             <View style={styles.iconContainer}>
                 <item.iconFamily name={item.icon} size={24} color="#FFFFFF" />
             </View>

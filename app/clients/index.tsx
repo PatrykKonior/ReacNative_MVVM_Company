@@ -1,21 +1,25 @@
 import React from 'react';
-import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-export default function Index() {
+export default function ClientsScreen() {
+    const router = useRouter();
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Clients</Text>
-            <Button title="Add Client" onPress={() => console.log('Navigate to Add Client')} />
-            <FlatList
-                data={[{ id: '1', name: 'Client A' }, { id: '2', name: 'Client B' }]}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.client}>
-                        <Text>{item.name}</Text>
-                        <Button title="Details" onPress={() => console.log(`Navigate to Details of ${item.name}`)} />
-                    </View>
-                )}
-            />
+            <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => router.push('/clients/addClient')}
+            >
+                <Text style={styles.optionText}>Add New Client</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.optionButton}
+                onPress={() => router.push('/clients/viewAllClients')}
+            >
+                <Text style={styles.optionText}>View All Clients</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -23,15 +27,28 @@ export default function Index() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         padding: 16,
+        backgroundColor: '#FFFFFF',
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
+        marginBottom: 20,
+        color: '#465954',
     },
-    client: {
-        padding: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+    optionButton: {
+        backgroundColor: '#465954',
+        padding: 15,
+        borderRadius: 8,
+        marginBottom: 10,
+        width: '80%',
+        alignItems: 'center',
+    },
+    optionText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

@@ -1,21 +1,19 @@
 import React from 'react';
-import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-export default function ProjectsView() {
+export default function ProjectsIndex() {
+    const router = useRouter();
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Projects</Text>
-            <Button title="Add Project" onPress={() => console.log('Navigate to Add Project')} />
-            <FlatList
-                data={[{ id: '1', name: 'Project A' }, { id: '2', name: 'Project B' }]}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.project}>
-                        <Text>{item.name}</Text>
-                        <Button title="Details" onPress={() => console.log(`Navigate to Details of ${item.name}`)} />
-                    </View>
-                )}
-            />
+            <TouchableOpacity style={styles.button} onPress={() => router.push('/projects/addproject')}>
+                <Text style={styles.buttonText}>Add New Project</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => router.push('/projects/viewallprojects')}>
+                <Text style={styles.buttonText}>View All Projects</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -23,15 +21,27 @@ export default function ProjectsView() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
         padding: 16,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
+        color: '#465954',
+        marginBottom: 20,
     },
-    project: {
-        padding: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+    button: {
+        backgroundColor: '#465954',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 8,
+        marginVertical: 10,
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
