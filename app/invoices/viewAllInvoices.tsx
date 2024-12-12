@@ -1,70 +1,105 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
-const mockInvoices = [
-    {
-        id: '1',
-        saleId: 101,
-        invoiceDate: '2023-01-01',
-        paymentDueDate: '2023-01-15',
-        invoiceStatus: 'Paid',
-        totalAmount: '1200.00',
+type Invoice = {
+    invoiceID: number;
+    saleID: number | null;
+    invoiceDate: string | null;
+    paymentDueDate: string | null;
+    invoiceStatus: string;
+    totalAmount: number | null;
+};
+
+const apiClient = axios.create({
+    baseURL: 'http://localhost:5069/api',
+    headers: {
+        'Content-Type': 'application/json',
     },
-    {
-        id: '2',
-        saleId: 102,
-        invoiceDate: '2023-02-01',
-        paymentDueDate: '2023-02-15',
-        invoiceStatus: 'Pending',
-        totalAmount: '800.00',
-    },
-];
+});
 
 export default function ViewAllInvoices() {
-    const handleEdit = (id: string) => {
-        alert(`Edit Invoice #${id}`);
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchInvoices = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get<Invoice[]>('/invoices');
+            setInvoices(response.data);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while fetching invoices'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        alert(`Delete Invoice #${id}`);
+    const handleEdit = (id: number) => {
+        alert(`Edit Invoice with ID: ${id}`);
     };
 
-    const renderItem = ({ item }: { item: { [key: string]: any } }) => (
+    const handleDelete = async (id: number) => {
+        try {
+            await apiClient.delete(`/invoices/${id}`);
+            setInvoices((prevInvoices) => prevInvoices.filter((invoice) => invoice.invoiceID !== id));
+            alert(`Deleted Invoice with ID: ${id}`);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while deleting the invoice'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
+    };
+
+    const renderItem = ({ item }: { item: Invoice }) => (
         <View style={styles.invoiceCard}>
             <View style={styles.invoiceContent}>
                 <View style={styles.cardHeader}>
                     <FontAwesome5 name="file-invoice-dollar" size={24} color="#465954" />
-                    <Text style={styles.invoiceId}>Invoice #{item.id}</Text>
+                    <Text style={styles.invoiceId}>Invoice #{item.invoiceID}</Text>
                 </View>
                 <View style={styles.cardDetails}>
-                    <Text style={styles.details}>Sale ID: {item.saleId}</Text>
-                    <Text style={styles.details}>Invoice Date: {item.invoiceDate}</Text>
-                    <Text style={styles.details}>Due Date: {item.paymentDueDate}</Text>
+                    <Text style={styles.details}>Sale ID: {item.saleID || 'N/A'}</Text>
+                    <Text style={styles.details}>Invoice Date: {item.invoiceDate || 'N/A'}</Text>
+                    <Text style={styles.details}>Due Date: {item.paymentDueDate || 'N/A'}</Text>
                     <Text style={styles.details}>Status: {item.invoiceStatus}</Text>
-                    <Text style={styles.details}>Amount: ${item.totalAmount}</Text>
+                    <Text style={styles.details}>Amount: ${item.totalAmount?.toFixed(2) || '0.00'}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                <TouchableOpacity onPress={() => handleEdit(item.invoiceID)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <TouchableOpacity onPress={() => handleDelete(item.invoiceID)}>
                     <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
+    useEffect(() => {
+        fetchInvoices();
+    }, []);
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Invoices</Text>
-            <FlatList
-                data={mockInvoices}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#465954" />
+            ) : (
+                <FlatList
+                    data={invoices}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.invoiceID.toString()}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
         </View>
     );
 }
@@ -124,9 +159,9 @@ const styles = StyleSheet.create({
     },
     actionContainer: {
         flexDirection: 'row',
-        alignItems: 'center', // Wyśrodkowanie ikon
+        alignItems: 'center',
     },
     actionIcon: {
-        marginLeft: 15, // Odstęp między ikonami
+        marginLeft: 15,
     },
 });

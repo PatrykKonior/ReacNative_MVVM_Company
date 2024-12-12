@@ -1,30 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
-const mockDepartments = [
-    {
-        id: '1',
-        departmentName: 'Human Resources',
-        managerId: 101,
+type Department = {
+    departmentID: number;
+    departmentName: string;
+    managerID?: number;
+};
+
+const apiClient = axios.create({
+    baseURL: 'http://localhost:5069/api',
+    headers: {
+        'Content-Type': 'application/json',
     },
-    {
-        id: '2',
-        departmentName: 'Engineering',
-        managerId: 102,
-    },
-];
+});
 
 export default function ViewAllDepartments() {
-    const handleEdit = (id: string) => {
-        alert(`Edit Department #${id}`);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchDepartments = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get<Department[]>('/departments');
+            setDepartments(response.data);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while fetching departments'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        alert(`Delete Department #${id}`);
+    const handleEdit = (id: number) => {
+        alert(`Edit Department with ID: ${id}`);
     };
 
-    const renderItem = ({ item }: { item: { [key: string]: any } }) => (
+    const handleDelete = async (id: number) => {
+        try {
+            await apiClient.delete(`/departments/${id}`);
+            setDepartments((prevDepartments) => prevDepartments.filter((dept) => dept.departmentID !== id));
+            alert(`Deleted Department with ID: ${id}`);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while deleting the department'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
+    };
+
+    const renderItem = ({ item }: { item: Department }) => (
         <View style={styles.departmentCard}>
             <View style={styles.departmentContent}>
                 <View style={styles.cardHeader}>
@@ -32,29 +62,37 @@ export default function ViewAllDepartments() {
                     <Text style={styles.departmentName}>{item.departmentName}</Text>
                 </View>
                 <View style={styles.cardDetails}>
-                    <Text style={styles.details}>Manager ID: {item.managerId}</Text>
+                    <Text style={styles.details}>Manager ID: {item.managerID || 'N/A'}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                <TouchableOpacity onPress={() => handleEdit(item.departmentID)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <TouchableOpacity onPress={() => handleDelete(item.departmentID)}>
                     <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
+    useEffect(() => {
+        fetchDepartments();
+    }, []);
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Departments</Text>
-            <FlatList
-                data={mockDepartments}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#465954" />
+            ) : (
+                <FlatList
+                    data={departments}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.departmentID.toString()}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
         </View>
     );
 }
@@ -114,9 +152,9 @@ const styles = StyleSheet.create({
     },
     actionContainer: {
         flexDirection: 'row',
-        alignItems: 'center', // Wyśrodkowanie ikon
+        alignItems: 'center',
     },
     actionIcon: {
-        marginLeft: 15, // Odstęp między ikonami
+        marginLeft: 15,
     },
 });

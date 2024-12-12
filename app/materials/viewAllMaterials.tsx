@@ -1,61 +1,100 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
-const mockMaterials = [
-    {
-        id: '1',
-        name: 'Concrete',
-        description: 'High-strength concrete for building.',
-        unitPrice: '120.50',
-        vatRate: '23.00',
+type Material = {
+    materialID: number;
+    materialName: string;
+    materialDescription: string;
+    unitPrice: number | null;
+    vatRate: number | null;
+};
+
+const apiClient = axios.create({
+    baseURL: 'http://localhost:5069/api',
+    headers: {
+        'Content-Type': 'application/json',
     },
-    {
-        id: '2',
-        name: 'Steel',
-        description: 'Reinforcement steel bars.',
-        unitPrice: '200.00',
-        vatRate: '23.00',
-    },
-];
+});
 
 export default function ViewAllMaterials() {
-    const handleEdit = (id: string) => {
+    const [materials, setMaterials] = useState<Material[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchMaterials = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get<Material[]>('/materials');
+            setMaterials(response.data);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while fetching materials'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = (id: number) => {
         alert(`Edit Material with ID: ${id}`);
     };
 
-    const handleDelete = (id: string) => {
-        alert(`Delete Material with ID: ${id}`);
+    const handleDelete = async (id: number) => {
+        try {
+            await apiClient.delete(`/materials/${id}`);
+            setMaterials((prevMaterials) => prevMaterials.filter((material) => material.materialID !== id));
+            alert(`Deleted Material with ID: ${id}`);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while deleting the material'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
     };
 
-    const renderItem = ({ item }: { item: { [key: string]: any } }) => (
+    const renderItem = ({ item }: { item: Material }) => (
         <View style={styles.materialCard}>
             <View style={styles.materialContent}>
-                <Text style={styles.materialName}>{item.name}</Text>
-                <Text style={styles.details}>Description: {item.description}</Text>
-                <Text style={styles.details}>Unit Price: ${item.unitPrice}</Text>
-                <Text style={styles.details}>VAT Rate: {item.vatRate}%</Text>
+                <View style={styles.cardHeader}>
+                    <FontAwesome5 name="boxes" size={24} color="#465954" />
+                    <Text style={styles.materialName}>{item.materialName}</Text>
+                </View>
+                <Text style={styles.details}>Description: {item.materialDescription}</Text>
+                <Text style={styles.details}>Unit Price: ${item.unitPrice?.toFixed(2) || '0.00'}</Text>
+                <Text style={styles.details}>VAT Rate: {item.vatRate || '0.00'}%</Text>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                <TouchableOpacity onPress={() => handleEdit(item.materialID)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <TouchableOpacity onPress={() => handleDelete(item.materialID)}>
                     <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
+    useEffect(() => {
+        fetchMaterials();
+    }, []);
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Materials</Text>
-            <FlatList
-                data={mockMaterials}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#465954" />
+            ) : (
+                <FlatList
+                    data={materials}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.materialID.toString()}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
         </View>
     );
 }
@@ -74,7 +113,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     listContainer: {
-        flexGrow: 1,
         paddingVertical: 10,
     },
     materialCard: {
@@ -83,8 +121,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
-        marginBottom: 10,
         borderRadius: 10,
+        marginBottom: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -95,10 +133,16 @@ const styles = StyleSheet.create({
         flex: 1,
         marginRight: 10,
     },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
     materialName: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#0D0D0D',
+        marginLeft: 10,
     },
     details: {
         fontSize: 14,
@@ -107,9 +151,9 @@ const styles = StyleSheet.create({
     },
     actionContainer: {
         flexDirection: 'row',
-        alignItems: 'center', // Wyśrodkowanie ikon w pionie
+        alignItems: 'center',
     },
     actionIcon: {
-        marginLeft: 15, // Odstęp między ikonami
+        marginLeft: 15,
     },
 });

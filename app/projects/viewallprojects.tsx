@@ -1,42 +1,66 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
-const mockProjects = [
-    {
-        id: '1',
-        projectName: 'Project A',
-        projectType: 'Construction',
-        projectStartDate: '2023-01-01',
-        projectEndDate: '2023-06-01',
-        projectBudget: 50000,
-        vatRate: 23,
-        projectStatus: 'Active',
-        managerId: 101,
+type Project = {
+    projectID: number;
+    clientID?: number;
+    projectName: string;
+    projectType: string;
+    projectStartDate?: string;
+    projectEndDate?: string;
+    projectBudget?: number;
+    vatRate?: number;
+    projectStatus: string;
+};
+
+const apiClient = axios.create({
+    baseURL: 'http://localhost:5069/api',
+    headers: {
+        'Content-Type': 'application/json',
     },
-    {
-        id: '2',
-        projectName: 'Project B',
-        projectType: 'Software Development',
-        projectStartDate: '2023-03-01',
-        projectEndDate: '2023-12-01',
-        projectBudget: 75000,
-        vatRate: 19,
-        projectStatus: 'Pending',
-        managerId: 102,
-    },
-];
+});
 
 export default function ViewAllProjects() {
-    const handleEdit = (id: string) => {
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchProjects = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get<Project[]>('/projects');
+            setProjects(response.data);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while fetching projects'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEdit = (id: number) => {
         alert(`Edit project with ID: ${id}`);
     };
 
-    const handleDelete = (id: string) => {
-        alert(`Delete project with ID: ${id}`);
+    const handleDelete = async (id: number) => {
+        try {
+            await apiClient.delete(`/projects/${id}`);
+            setProjects((prevProjects) => prevProjects.filter((project) => project.projectID !== id));
+            alert(`Deleted project with ID: ${id}`);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while deleting the project'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
     };
 
-    const renderItem = ({ item }: { item: { [key: string]: any } }) => (
+    const renderItem = ({ item }: { item: Project }) => (
         <View style={styles.projectCard}>
             <View style={styles.projectContent}>
                 <View style={styles.cardHeader}>
@@ -45,34 +69,42 @@ export default function ViewAllProjects() {
                 </View>
                 <View style={styles.cardDetails}>
                     <Text style={styles.details}>Type: {item.projectType}</Text>
-                    <Text style={styles.details}>Start: {item.projectStartDate}</Text>
-                    <Text style={styles.details}>End: {item.projectEndDate}</Text>
-                    <Text style={styles.details}>Budget: ${item.projectBudget}</Text>
-                    <Text style={styles.details}>VAT: {item.vatRate}%</Text>
+                    <Text style={styles.details}>Start: {item.projectStartDate || 'N/A'}</Text>
+                    <Text style={styles.details}>End: {item.projectEndDate || 'N/A'}</Text>
+                    <Text style={styles.details}>Budget: ${item.projectBudget?.toFixed(2) || 'N/A'}</Text>
+                    <Text style={styles.details}>VAT: {item.vatRate || 0}%</Text>
                     <Text style={styles.details}>Status: {item.projectStatus}</Text>
-                    <Text style={styles.details}>Manager ID: {item.managerId}</Text>
+                    <Text style={styles.details}>Manager ID: {item.clientID || 'N/A'}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                <TouchableOpacity onPress={() => handleEdit(item.projectID)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <TouchableOpacity onPress={() => handleDelete(item.projectID)}>
                     <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
+    useEffect(() => {
+        fetchProjects();
+    }, []);
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Projects</Text>
-            <FlatList
-                data={mockProjects}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#465954" />
+            ) : (
+                <FlatList
+                    data={projects}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.projectID.toString()}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
         </View>
     );
 }

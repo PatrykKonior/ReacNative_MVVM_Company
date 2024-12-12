@@ -1,70 +1,96 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
-const timeLogsData = [
-    {
-        id: '1',
-        employeeName: 'John Doe',
-        projectName: 'Project Alpha',
-        logDate: '2023-12-01',
-        hoursWorked: 5.5,
-        hourlyRate: 50.0,
-        totalAmount: 275.0,
+type TimeLog = {
+    timeLogID: number;
+    employeeID: number | null;
+    projectID: number | null;
+    logDate: string | null;
+    hoursWorked: number | null;
+    hourlyRate: number | null;
+    totalAmount: number | null;
+};
+
+const apiClient = axios.create({
+    baseURL: 'http://localhost:5069/api',
+    headers: {
+        'Content-Type': 'application/json',
     },
-    {
-        id: '2',
-        employeeName: 'Jane Smith',
-        projectName: 'Project Beta',
-        logDate: '2023-12-02',
-        hoursWorked: 8.0,
-        hourlyRate: 45.0,
-        totalAmount: 360.0,
-    },
-];
+});
 
 export default function ViewAllTimeLogs() {
-    const handleEdit = (id: string) => {
-        alert(`Edit record with ID: ${id}`);
+    const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchTimeLogs = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get<TimeLog[]>('/timelogs');
+            setTimeLogs(response.data);
+        } catch (error) {
+            console.error('Error fetching time logs:', error);
+            alert('An error occurred while fetching time logs.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = (id: string) => {
-        alert(`Delete record with ID: ${id}`);
+    const handleEdit = (id: number) => {
+        alert(`Edit Time Log with ID: ${id}`);
     };
 
-    const renderItem = ({ item }: { item: typeof timeLogsData[0] }) => (
+    const handleDelete = async (id: number) => {
+        try {
+            await apiClient.delete(`/timelogs/${id}`);
+            setTimeLogs((prevLogs) => prevLogs.filter((log) => log.timeLogID !== id));
+            alert(`Deleted Time Log with ID: ${id}`);
+        } catch (error) {
+            console.error('Error deleting time log:', error);
+            alert('An error occurred while deleting the time log.');
+        }
+    };
+
+    const renderTimeLogItem = ({ item }: { item: TimeLog }) => (
         <View style={styles.recordContainer}>
-            {/* Record Content */}
             <View style={styles.recordContent}>
-                <Text style={styles.recordTitle}>{item.employeeName}</Text>
-                <Text style={styles.recordSubTitle}>Project: {item.projectName}</Text>
+                <Text style={styles.recordTitle}>Employee ID: {item.employeeID}</Text>
+                <Text style={styles.recordSubTitle}>Project ID: {item.projectID}</Text>
                 <Text style={styles.recordSubTitle}>Date: {item.logDate}</Text>
                 <Text style={styles.recordSubTitle}>
-                    Hours: {item.hoursWorked}, Rate: ${item.hourlyRate}/hr
+                    Hours: {item.hoursWorked || 0}, Rate: ${item.hourlyRate || 0}/hr
                 </Text>
-                <Text style={styles.recordSubTitle}>Total: ${item.totalAmount}</Text>
+                <Text style={styles.recordSubTitle}>Total: ${item.totalAmount || 0}</Text>
             </View>
-            {/* Actions */}
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                <TouchableOpacity onPress={() => handleEdit(item.timeLogID)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                <TouchableOpacity onPress={() => handleDelete(item.timeLogID)}>
                     <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
                 </TouchableOpacity>
             </View>
         </View>
     );
 
+    useEffect(() => {
+        fetchTimeLogs();
+    }, []);
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>All Time Logs</Text>
-            <FlatList
-                data={timeLogsData}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+            {loading ? (
+                <ActivityIndicator size="large" color="#465954" />
+            ) : (
+                <FlatList
+                    data={timeLogs}
+                    renderItem={renderTimeLogItem}
+                    keyExtractor={(item) => item.timeLogID.toString()}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
         </View>
     );
 }
