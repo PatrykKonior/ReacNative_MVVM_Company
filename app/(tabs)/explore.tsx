@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-type RoutePaths = "/clients" | "/projects" | "/employees" | "/departments" | "/invoices" | "/materials";
+type RoutePaths = "/clients" | "/projects" | "/employees" | "/departments" | "/invoices" | "/materials" | "/Tasks" | "/timeLogs" | "/settings";
 
 const categories: Array<{
     id: string;
@@ -18,6 +18,9 @@ const categories: Array<{
     { id: '4', title: 'Departments', icon: 'building', iconFamily: FontAwesome5, route: '/departments' },
     { id: '5', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5, route: '/invoices' },
     { id: '6', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5, route: '/materials' },
+    { id: '7', title: 'Tasks', icon: 'tasks', iconFamily: FontAwesome5, route: '/Tasks' },
+    { id: '8', title: 'Time Logs', icon: 'clock', iconFamily: FontAwesome5, route: '/timeLogs' },
+    { id: '9', title: 'Settings', icon: 'cogs', iconFamily: FontAwesome5, route: '/settings' },
 ];
 
 export default function CategoriesScreen() {
