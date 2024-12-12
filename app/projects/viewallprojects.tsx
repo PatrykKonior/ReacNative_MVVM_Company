@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const mockProjects = [
     {
@@ -28,22 +28,40 @@ const mockProjects = [
 ];
 
 export default function ViewAllProjects() {
+    const handleEdit = (id: string) => {
+        alert(`Edit project with ID: ${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete project with ID: ${id}`);
+    };
+
     const renderItem = ({ item }: { item: { [key: string]: any } }) => (
-        <TouchableOpacity style={styles.projectCard} onPress={() => alert(`Details for ${item.projectName}`)}>
-            <View style={styles.cardHeader}>
-                <FontAwesome5 name="clipboard-list" size={24} color="#465954" />
-                <Text style={styles.projectName}>{item.projectName}</Text>
+        <View style={styles.projectCard}>
+            <View style={styles.projectContent}>
+                <View style={styles.cardHeader}>
+                    <FontAwesome5 name="clipboard-list" size={24} color="#465954" />
+                    <Text style={styles.projectName}>{item.projectName}</Text>
+                </View>
+                <View style={styles.cardDetails}>
+                    <Text style={styles.details}>Type: {item.projectType}</Text>
+                    <Text style={styles.details}>Start: {item.projectStartDate}</Text>
+                    <Text style={styles.details}>End: {item.projectEndDate}</Text>
+                    <Text style={styles.details}>Budget: ${item.projectBudget}</Text>
+                    <Text style={styles.details}>VAT: {item.vatRate}%</Text>
+                    <Text style={styles.details}>Status: {item.projectStatus}</Text>
+                    <Text style={styles.details}>Manager ID: {item.managerId}</Text>
+                </View>
             </View>
-            <View style={styles.cardDetails}>
-                <Text style={styles.details}>Type: {item.projectType}</Text>
-                <Text style={styles.details}>Start: {item.projectStartDate}</Text>
-                <Text style={styles.details}>End: {item.projectEndDate}</Text>
-                <Text style={styles.details}>Budget: ${item.projectBudget}</Text>
-                <Text style={styles.details}>VAT: {item.vatRate}%</Text>
-                <Text style={styles.details}>Status: {item.projectStatus}</Text>
-                <Text style={styles.details}>Manager ID: {item.managerId}</Text>
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
             </View>
-        </TouchableOpacity>
+        </View>
     );
 
     return (
@@ -76,6 +94,9 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     projectCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
         borderRadius: 10,
@@ -85,6 +106,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    projectContent: {
+        flex: 1,
+        marginRight: 10,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -104,5 +129,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#465954',
         marginBottom: 5,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionIcon: {
+        marginLeft: 15,
     },
 });

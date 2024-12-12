@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const mockInvoices = [
     {
@@ -22,33 +22,51 @@ const mockInvoices = [
 ];
 
 export default function ViewAllInvoices() {
+    const handleEdit = (id: string) => {
+        alert(`Edit Invoice #${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete Invoice #${id}`);
+    };
+
     const renderItem = ({ item }: { item: { [key: string]: any } }) => (
-        <TouchableOpacity style={styles.invoiceCard} onPress={() => alert(`Details for Invoice #${item.id}`)}>
-    <View style={styles.cardHeader}>
-    <FontAwesome5 name="file-invoice-dollar" size={24} color="#465954" />
-    <Text style={styles.invoiceId}>Invoice #{item.id}</Text>
+        <View style={styles.invoiceCard}>
+            <View style={styles.invoiceContent}>
+                <View style={styles.cardHeader}>
+                    <FontAwesome5 name="file-invoice-dollar" size={24} color="#465954" />
+                    <Text style={styles.invoiceId}>Invoice #{item.id}</Text>
+                </View>
+                <View style={styles.cardDetails}>
+                    <Text style={styles.details}>Sale ID: {item.saleId}</Text>
+                    <Text style={styles.details}>Invoice Date: {item.invoiceDate}</Text>
+                    <Text style={styles.details}>Due Date: {item.paymentDueDate}</Text>
+                    <Text style={styles.details}>Status: {item.invoiceStatus}</Text>
+                    <Text style={styles.details}>Amount: ${item.totalAmount}</Text>
+                </View>
+            </View>
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
+            </View>
         </View>
-        <View style={styles.cardDetails}>
-    <Text style={styles.details}>Sale ID: {item.saleId}</Text>
-    <Text style={styles.details}>Invoice Date: {item.invoiceDate}</Text>
-    <Text style={styles.details}>Due Date: {item.paymentDueDate}</Text>
-    <Text style={styles.details}>Status: {item.invoiceStatus}</Text>
-    <Text style={styles.details}>Amount: ${item.totalAmount}</Text>
-    </View>
-    </TouchableOpacity>
-);
+    );
 
     return (
         <View style={styles.container}>
-        <Text style={styles.title}>Invoices</Text>
+            <Text style={styles.title}>Invoices</Text>
             <FlatList
-    data={mockInvoices}
-    renderItem={renderItem}
-    keyExtractor={(item) => item.id}
-    contentContainerStyle={styles.listContainer}
-    />
-    </View>
-);
+                data={mockInvoices}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContainer}
+            />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -68,6 +86,9 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     invoiceCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
         borderRadius: 10,
@@ -77,6 +98,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    invoiceContent: {
+        flex: 1,
+        marginRight: 10,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -96,5 +121,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#465954',
         marginBottom: 5,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center', // Wyśrodkowanie ikon
+    },
+    actionIcon: {
+        marginLeft: 15, // Odstęp między ikonami
     },
 });

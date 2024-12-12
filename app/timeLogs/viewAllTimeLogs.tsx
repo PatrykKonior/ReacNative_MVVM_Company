@@ -1,36 +1,58 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-const mockTimeLogs = [
+const timeLogsData = [
     {
-        TimeLogID: '1',
-        EmployeeID: '101',
-        ProjectID: '202',
-        LogDate: '2023-12-01',
-        HoursWorked: '8',
-        HourlyRate: '25.00',
-        TotalAmount: '200.00',
+        id: '1',
+        employeeName: 'John Doe',
+        projectName: 'Project Alpha',
+        logDate: '2023-12-01',
+        hoursWorked: 5.5,
+        hourlyRate: 50.0,
+        totalAmount: 275.0,
     },
     {
-        TimeLogID: '2',
-        EmployeeID: '102',
-        ProjectID: '203',
-        LogDate: '2023-12-02',
-        HoursWorked: '5',
-        HourlyRate: '20.00',
-        TotalAmount: '100.00',
+        id: '2',
+        employeeName: 'Jane Smith',
+        projectName: 'Project Beta',
+        logDate: '2023-12-02',
+        hoursWorked: 8.0,
+        hourlyRate: 45.0,
+        totalAmount: 360.0,
     },
 ];
 
 export default function ViewAllTimeLogs() {
-    const renderTimeLogItem = ({ item }: { item: typeof mockTimeLogs[0] }) => (
-        <View style={styles.timeLogCard}>
-            <Text style={styles.timeLogTitle}>Employee ID: {item.EmployeeID}</Text>
-            <Text style={styles.timeLogSubtitle}>Project ID: {item.ProjectID}</Text>
-            <Text style={styles.timeLogSubtitle}>Log Date: {item.LogDate}</Text>
-            <Text style={styles.timeLogSubtitle}>Hours Worked: {item.HoursWorked}</Text>
-            <Text style={styles.timeLogSubtitle}>Hourly Rate: {item.HourlyRate}</Text>
-            <Text style={styles.timeLogSubtitle}>Total Amount: {item.TotalAmount}</Text>
+    const handleEdit = (id: string) => {
+        alert(`Edit record with ID: ${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete record with ID: ${id}`);
+    };
+
+    const renderItem = ({ item }: { item: typeof timeLogsData[0] }) => (
+        <View style={styles.recordContainer}>
+            {/* Record Content */}
+            <View style={styles.recordContent}>
+                <Text style={styles.recordTitle}>{item.employeeName}</Text>
+                <Text style={styles.recordSubTitle}>Project: {item.projectName}</Text>
+                <Text style={styles.recordSubTitle}>Date: {item.logDate}</Text>
+                <Text style={styles.recordSubTitle}>
+                    Hours: {item.hoursWorked}, Rate: ${item.hourlyRate}/hr
+                </Text>
+                <Text style={styles.recordSubTitle}>Total: ${item.totalAmount}</Text>
+            </View>
+            {/* Actions */}
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
@@ -38,9 +60,9 @@ export default function ViewAllTimeLogs() {
         <View style={styles.container}>
             <Text style={styles.title}>All Time Logs</Text>
             <FlatList
-                data={mockTimeLogs}
-                renderItem={renderTimeLogItem}
-                keyExtractor={(item) => item.TimeLogID}
+                data={timeLogsData}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContainer}
             />
         </View>
@@ -57,14 +79,16 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#465954',
         textAlign: 'center',
+        color: '#465954',
     },
     listContainer: {
-        flexGrow: 1,
         paddingVertical: 10,
     },
-    timeLogCard: {
+    recordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
         marginBottom: 10,
@@ -75,14 +99,25 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    timeLogTitle: {
+    recordContent: {
+        flex: 1,
+        marginRight: 10,
+    },
+    recordTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#0D0D0D',
     },
-    timeLogSubtitle: {
+    recordSubTitle: {
         fontSize: 14,
         color: '#465954',
-        marginTop: 5,
+        marginTop: 2,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionIcon: {
+        marginLeft: 15,
     },
 });

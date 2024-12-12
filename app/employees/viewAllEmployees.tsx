@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const mockEmployees = [
     {
@@ -26,20 +26,38 @@ const mockEmployees = [
 ];
 
 export default function ViewAllEmployees() {
+    const handleEdit = (id: string) => {
+        alert(`Edit Employee #${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete Employee #${id}`);
+    };
+
     const renderItem = ({ item }: { item: { [key: string]: any } }) => (
-        <TouchableOpacity style={styles.employeeCard} onPress={() => alert(`Details for ${item.firstName} ${item.lastName}`)}>
-            <View style={styles.cardHeader}>
-                <FontAwesome5 name="user" size={24} color="#465954" />
-                <Text style={styles.employeeName}>{item.firstName} {item.lastName}</Text>
+        <View style={styles.employeeCard}>
+            <View style={styles.employeeContent}>
+                <View style={styles.cardHeader}>
+                    <FontAwesome5 name="user" size={24} color="#465954" />
+                    <Text style={styles.employeeName}>{item.firstName} {item.lastName}</Text>
+                </View>
+                <View style={styles.cardDetails}>
+                    <Text style={styles.details}>Position: {item.position}</Text>
+                    <Text style={styles.details}>Phone: {item.phoneNumber}</Text>
+                    <Text style={styles.details}>Email: {item.email}</Text>
+                    <Text style={styles.details}>Hire Date: {item.hireDate}</Text>
+                    <Text style={styles.details}>Salary: ${item.salary}</Text>
+                </View>
             </View>
-            <View style={styles.cardDetails}>
-                <Text style={styles.details}>Position: {item.position}</Text>
-                <Text style={styles.details}>Phone: {item.phoneNumber}</Text>
-                <Text style={styles.details}>Email: {item.email}</Text>
-                <Text style={styles.details}>Hire Date: {item.hireDate}</Text>
-                <Text style={styles.details}>Salary: ${item.salary}</Text>
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
             </View>
-        </TouchableOpacity>
+        </View>
     );
 
     return (
@@ -72,6 +90,9 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     employeeCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
         borderRadius: 10,
@@ -81,6 +102,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    employeeContent: {
+        flex: 1,
+        marginRight: 10,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -100,5 +125,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#465954',
         marginBottom: 5,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center', // Wyśrodkowanie ikon
+    },
+    actionIcon: {
+        marginLeft: 15,
     },
 });

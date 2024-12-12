@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const mockMaterials = [
     {
@@ -20,18 +20,31 @@ const mockMaterials = [
 ];
 
 export default function ViewAllMaterials() {
+    const handleEdit = (id: string) => {
+        alert(`Edit Material with ID: ${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete Material with ID: ${id}`);
+    };
+
     const renderItem = ({ item }: { item: { [key: string]: any } }) => (
-        <TouchableOpacity style={styles.materialCard} onPress={() => alert(`Details for Material: ${item.name}`)}>
-            <View style={styles.cardHeader}>
-                <FontAwesome5 name="boxes" size={24} color="#465954" />
+        <View style={styles.materialCard}>
+            <View style={styles.materialContent}>
                 <Text style={styles.materialName}>{item.name}</Text>
-            </View>
-            <View style={styles.cardDetails}>
                 <Text style={styles.details}>Description: {item.description}</Text>
                 <Text style={styles.details}>Unit Price: ${item.unitPrice}</Text>
                 <Text style={styles.details}>VAT Rate: {item.vatRate}%</Text>
             </View>
-        </TouchableOpacity>
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
+            </View>
+        </View>
     );
 
     return (
@@ -61,36 +74,42 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     listContainer: {
+        flexGrow: 1,
         paddingVertical: 10,
     },
     materialCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
-        borderRadius: 10,
         marginBottom: 10,
+        borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
     },
-    cardHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
+    materialContent: {
+        flex: 1,
+        marginRight: 10,
     },
     materialName: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#0D0D0D',
-        marginLeft: 10,
-    },
-    cardDetails: {
-        marginTop: 10,
     },
     details: {
         fontSize: 14,
         color: '#465954',
-        marginBottom: 5,
+        marginTop: 5,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center', // Wyśrodkowanie ikon w pionie
+    },
+    actionIcon: {
+        marginLeft: 15, // Odstęp między ikonami
     },
 });

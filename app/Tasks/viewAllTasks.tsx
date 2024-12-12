@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 const mockTasks = [
     {
@@ -19,12 +20,30 @@ const mockTasks = [
 ];
 
 export default function ViewAllTasks() {
+    const handleEdit = (id: string) => {
+        alert(`Edit task with ID: ${id}`);
+    };
+
+    const handleDelete = (id: string) => {
+        alert(`Delete task with ID: ${id}`);
+    };
+
     const renderTaskItem = ({ item }: { item: typeof mockTasks[0] }) => (
         <View style={styles.taskCard}>
-            <Text style={styles.taskTitle}>{item.TaskName}</Text>
-            <Text style={styles.taskDescription}>{item.TaskDescription}</Text>
-            <Text style={styles.taskStatus}>Status: {item.TaskStatus}</Text>
-            <Text style={styles.taskHours}>Estimated Hours: {item.EstimatedHours}</Text>
+            <View style={styles.taskContent}>
+                <Text style={styles.taskTitle}>{item.TaskName}</Text>
+                <Text style={styles.taskDescription}>{item.TaskDescription}</Text>
+                <Text style={styles.taskStatus}>Status: {item.TaskStatus}</Text>
+                <Text style={styles.taskHours}>Estimated Hours: {item.EstimatedHours}</Text>
+            </View>
+            <View style={styles.actionContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.TaskID)}>
+                    <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.TaskID)}>
+                    <Ionicons name="trash" size={24} color="#F20505" style={styles.actionIcon} />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
@@ -59,6 +78,9 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     taskCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         backgroundColor: '#EBF2EB',
         padding: 15,
         marginBottom: 10,
@@ -68,6 +90,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    taskContent: {
+        flex: 1,
+        marginRight: 10,
     },
     taskTitle: {
         fontSize: 18,
@@ -89,5 +115,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#0D0D0D',
         marginTop: 5,
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionIcon: {
+        marginLeft: 15,
     },
 });
