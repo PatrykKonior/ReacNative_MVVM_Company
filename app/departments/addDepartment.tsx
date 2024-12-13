@@ -1,35 +1,116 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import Toast from 'react-native-toast-message';
+import axios from 'axios';
 
 export default function AddDepartment() {
+    const [department, setDepartment] = useState({
+        DepartmentName: '',
+        ManagerID: '',
+    });
+
+    const [errors, setErrors] = useState({
+        DepartmentName: '',
+        ManagerID: '',
+    });
+
+    const apiClient = axios.create({
+        baseURL: 'http://localhost:5069/api',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    const handleInputChange = (field: string, value: string) => {
+        setDepartment({ ...department, [field]: value });
+        setErrors({ ...errors, [field]: '' }); // Clear error for the field
+    };
+
+    const validateFields = () => {
+        const newErrors: any = {};
+
+        if (!department.DepartmentName.trim()) newErrors.DepartmentName = 'Department Name is required';
+        if (!department.ManagerID.trim()) newErrors.ManagerID = 'Manager ID is required';
+        if (isNaN(Number(department.ManagerID))) newErrors.ManagerID = 'Manager ID must be a number';
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleAddDepartment = async () => {
+        if (!validateFields()) return;
+
+        try {
+            await apiClient.post('/departments', {
+                DepartmentName: department.DepartmentName,
+                ManagerID: Number(department.ManagerID),
+            });
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Department added successfully 🚀',
+                position: 'top',
+                visibilityTime: 4000,
+                props: {
+                    style: styles.toastSuccess,
+                },
+            });
+
+            setDepartment({
+                DepartmentName: '',
+                ManagerID: '',
+            });
+        } catch (error) {
+            console.error('Error adding department:', error);
+
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not add Department. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+                props: {
+                    style: styles.toastError,
+                },
+            });
+        }
+    };
+
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Add New Department</Text>
 
-            {/* Formularz */}
             <TextInput
-                style={styles.input}
                 placeholder="Department Name"
-                placeholderTextColor="#BBBFB4"
+                style={[styles.input, errors.DepartmentName ? styles.errorBorder : null]}
+                value={department.DepartmentName}
+                onChangeText={(text) => handleInputChange('DepartmentName', text)}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Manager ID"
-                placeholderTextColor="#BBBFB4"
-                keyboardType="number-pad"
-            />
+            {errors.DepartmentName && <Text style={styles.errorText}>{errors.DepartmentName}</Text>}
 
-            {/* Przycisk dodawania */}
-            <TouchableOpacity style={styles.addButton}>
+            <TextInput
+                placeholder="Manager ID"
+                style={[styles.input, errors.ManagerID ? styles.errorBorder : null]}
+                value={department.ManagerID}
+                keyboardType="number-pad"
+                onChangeText={(text) => handleInputChange('ManagerID', text)}
+            />
+            {errors.ManagerID && <Text style={styles.errorText}>{errors.ManagerID}</Text>}
+
+            <TouchableOpacity style={styles.addButton} onPress={handleAddDepartment}>
                 <Text style={styles.addButtonText}>Add Department</Text>
             </TouchableOpacity>
-        </View>
+
+            <Toast />
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
+        alignItems: 'center',
         padding: 16,
         backgroundColor: '#FFFFFF',
     },
@@ -41,25 +122,47 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     input: {
+        width: '100%',
         height: 50,
-        borderColor: '#BBBFB4',
+        borderColor: '#CCC',
         borderWidth: 1,
         borderRadius: 8,
-        marginBottom: 15,
         paddingHorizontal: 10,
-        fontSize: 16,
-        color: '#0D0D0D',
+        marginBottom: 15,
         backgroundColor: '#F9F9F9',
     },
     addButton: {
         backgroundColor: '#465954',
-        paddingVertical: 15,
+        padding: 15,
         borderRadius: 8,
+        width: '80%',
         alignItems: 'center',
+        marginVertical: 10,
     },
     addButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    errorText: {
+        color: '#F20505',
+        fontSize: 12,
+        alignSelf: 'flex-start',
+        marginBottom: 10,
+    },
+    errorBorder: {
+        borderColor: '#F20505',
+    },
+    toastSuccess: {
+        backgroundColor: '#465954',
+        borderRadius: 10,
+        padding: 15,
+        width: '90%',
+    },
+    toastError: {
+        backgroundColor: '#8B0000',
+        borderRadius: 10,
+        padding: 15,
+        width: '90%',
     },
 });
