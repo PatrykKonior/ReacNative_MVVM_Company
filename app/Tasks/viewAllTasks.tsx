@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    Button,
+    Alert,
+} from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -25,6 +36,9 @@ const apiClient = axios.create({
 export default function ViewAllTasks() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formState, setFormState] = useState<Task | null>(null);
 
     const fetchTasks = async () => {
         setLoading(true);
@@ -36,27 +50,57 @@ export default function ViewAllTasks() {
                 ? error.response?.data || 'An error occurred while fetching tasks'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit Task with ID: ${id}`);
+    const handleEdit = (task: Task) => {
+        setSelectedTask(task);
+        setFormState(task);
+        setModalVisible(true);
+    };
+
+    const handleSave = async () => {
+        if (!formState) return;
+
+        try {
+            await apiClient.put(`/tasks/${formState.taskID}`, formState);
+            setTasks((prevTasks) =>
+                prevTasks.map((t) => (t.taskID === formState.taskID ? { ...formState } : t))
+            );
+            Alert.alert('Success', 'Task updated successfully!');
+            setModalVisible(false);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the task'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await apiClient.delete(`/tasks/${id}`);
             setTasks((prevTasks) => prevTasks.filter((task) => task.taskID !== id));
-            alert(`Deleted Task with ID: ${id}`);
+            Alert.alert('Success', `Deleted Task with ID: ${id}`);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? error.response?.data || 'An error occurred while deleting the task'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
+    };
+
+    const handleInputChange = (field: keyof Task, value: string) => {
+        if (formState) {
+            setFormState({
+                ...formState,
+                [field]: field === 'estimatedHours' ? Number(value) : value,
+            });
         }
     };
 
@@ -69,7 +113,7 @@ export default function ViewAllTasks() {
                 <Text style={styles.taskHours}>Estimated Hours: {item.estimatedHours || '0'}</Text>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.taskID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.taskID)}>
@@ -96,6 +140,54 @@ export default function ViewAllTasks() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+            <Modal visible={modalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Task</Text>
+                        {formState && (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Task Name"
+                                    value={formState.taskName}
+                                    onChangeText={(text) => handleInputChange('taskName', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Task Description"
+                                    value={formState.taskDescription}
+                                    onChangeText={(text) =>
+                                        handleInputChange('taskDescription', text)
+                                    }
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Status"
+                                    value={formState.taskStatus}
+                                    onChangeText={(text) => handleInputChange('taskStatus', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Estimated Hours"
+                                    value={formState.estimatedHours?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) =>
+                                        handleInputChange('estimatedHours', text)
+                                    }
+                                />
+                                <View style={styles.modalActions}>
+                                    <Button
+                                        title="Cancel"
+                                        color="#8B0000"
+                                        onPress={() => setModalVisible(false)}
+                                    />
+                                    <Button title="Save" onPress={handleSave} />
+                                </View>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -162,5 +254,36 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    input: {
+        height: 40,
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });

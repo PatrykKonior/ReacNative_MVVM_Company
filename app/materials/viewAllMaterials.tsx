@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    Button,
+    Alert,
+} from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -21,6 +32,9 @@ const apiClient = axios.create({
 export default function ViewAllMaterials() {
     const [materials, setMaterials] = useState<Material[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formState, setFormState] = useState<Material | null>(null);
 
     const fetchMaterials = async () => {
         setLoading(true);
@@ -32,27 +46,61 @@ export default function ViewAllMaterials() {
                 ? error.response?.data || 'An error occurred while fetching materials'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit Material with ID: ${id}`);
+    const handleEdit = (material: Material) => {
+        setSelectedMaterial(material);
+        setFormState(material);
+        setModalVisible(true);
+    };
+
+    const handleSave = async () => {
+        if (!formState) return;
+
+        try {
+            await apiClient.put(`/materials/${formState.materialID}`, formState);
+            setMaterials((prevMaterials) =>
+                prevMaterials.map((mat) =>
+                    mat.materialID === formState.materialID ? { ...formState } : mat
+                )
+            );
+            Alert.alert('Success', 'Material updated successfully!');
+            setModalVisible(false);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the material'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await apiClient.delete(`/materials/${id}`);
-            setMaterials((prevMaterials) => prevMaterials.filter((material) => material.materialID !== id));
-            alert(`Deleted Material with ID: ${id}`);
+            setMaterials((prevMaterials) =>
+                prevMaterials.filter((material) => material.materialID !== id)
+            );
+            Alert.alert('Success', `Deleted Material with ID: ${id}`);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? error.response?.data || 'An error occurred while deleting the material'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
+    };
+
+    const handleInputChange = (field: keyof Material, value: string) => {
+        if (formState) {
+            setFormState({
+                ...formState,
+                [field]: field === 'unitPrice' || field === 'vatRate' ? Number(value) : value,
+            });
         }
     };
 
@@ -68,7 +116,7 @@ export default function ViewAllMaterials() {
                 <Text style={styles.details}>VAT Rate: {item.vatRate || '0.00'}%</Text>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.materialID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.materialID)}>
@@ -95,6 +143,53 @@ export default function ViewAllMaterials() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+            <Modal visible={modalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Material</Text>
+                        {formState && (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Material Name"
+                                    value={formState.materialName}
+                                    onChangeText={(text) => handleInputChange('materialName', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Material Description"
+                                    value={formState.materialDescription}
+                                    onChangeText={(text) =>
+                                        handleInputChange('materialDescription', text)
+                                    }
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Unit Price"
+                                    value={formState.unitPrice?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('unitPrice', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="VAT Rate"
+                                    value={formState.vatRate?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('vatRate', text)}
+                                />
+                                <View style={styles.modalActions}>
+                                    <Button
+                                        title="Cancel"
+                                        color="#8B0000"
+                                        onPress={() => setModalVisible(false)}
+                                    />
+                                    <Button title="Save" onPress={handleSave} />
+                                </View>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -123,11 +218,6 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     materialContent: {
         flex: 1,
@@ -155,5 +245,36 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    input: {
+        height: 40,
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });

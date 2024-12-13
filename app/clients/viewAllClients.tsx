@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -8,6 +8,18 @@ type Client = {
     companyName: string;
     nip: string;
     regon: string;
+    phoneNumber: string;
+    email: string;
+    contactPersonName: string;
+};
+
+type Errors = {
+    companyName?: string;
+    nip?: string;
+    regon?: string;
+    phoneNumber?: string;
+    email?: string;
+    contactPersonName?: string;
 };
 
 const apiClient = axios.create({
@@ -20,6 +32,8 @@ const apiClient = axios.create({
 export default function ViewAllClients() {
     const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(false);
+    const [editingClient, setEditingClient] = useState<Client | null>(null);
+    const [errors, setErrors] = useState<Errors>({});
 
     const fetchClients = async () => {
         setLoading(true);
@@ -37,8 +51,39 @@ export default function ViewAllClients() {
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit Client #${id}`);
+    const handleEdit = (client: Client) => {
+        setEditingClient(client);
+        setErrors({});
+    };
+
+    const handleSave = async () => {
+        if (!editingClient) return;
+
+        const newErrors: Errors = {};
+        if (!editingClient.companyName.trim()) newErrors.companyName = 'Company Name is required';
+        if (!editingClient.nip.trim()) newErrors.nip = 'NIP is required';
+        if (!editingClient.regon.trim()) newErrors.regon = 'Regon is required';
+        if (!editingClient.phoneNumber.trim()) newErrors.phoneNumber = 'Phone Number is required';
+        if (!editingClient.email.trim()) newErrors.email = 'Email is required';
+        if (!editingClient.contactPersonName.trim()) newErrors.contactPersonName = 'Contact Person Name is required';
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        try {
+            await apiClient.put(`/clients/${editingClient.clientID}`, editingClient);
+            setEditingClient(null);
+            fetchClients();
+            alert('Client updated successfully!');
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the client'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
@@ -64,9 +109,12 @@ export default function ViewAllClients() {
             <View style={styles.cardDetails}>
                 <Text style={styles.details}>NIP: {item.nip}</Text>
                 <Text style={styles.details}>Regon: {item.regon}</Text>
+                <Text style={styles.details}>Phone: {item.phoneNumber}</Text>
+                <Text style={styles.details}>Email: {item.email}</Text>
+                <Text style={styles.details}>Contact Person: {item.contactPersonName}</Text>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.clientID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.clientID)}>
@@ -93,6 +141,81 @@ export default function ViewAllClients() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+
+            {/* Modal for Editing */}
+            <Modal visible={!!editingClient} animationType="slide">
+                <View style={styles.container}>
+                    <Text style={styles.title}>Edit Client</Text>
+
+                    {editingClient && (
+                        <>
+                            <TextInput
+                                style={[styles.input, errors.companyName ? styles.errorBorder : null]}
+                                placeholder="Company Name"
+                                value={editingClient.companyName}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, companyName: text })}
+                            />
+                            {errors.companyName && <Text style={styles.errorText}>{errors.companyName}</Text>}
+
+                            <TextInput
+                                style={[styles.input, errors.nip ? styles.errorBorder : null]}
+                                placeholder="NIP"
+                                value={editingClient.nip}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, nip: text })}
+                            />
+                            {errors.nip && <Text style={styles.errorText}>{errors.nip}</Text>}
+
+                            <TextInput
+                                style={[styles.input, errors.regon ? styles.errorBorder : null]}
+                                placeholder="Regon"
+                                value={editingClient.regon}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, regon: text })}
+                            />
+                            {errors.regon && <Text style={styles.errorText}>{errors.regon}</Text>}
+
+                            <TextInput
+                                style={[styles.input, errors.phoneNumber ? styles.errorBorder : null]}
+                                placeholder="Phone Number"
+                                value={editingClient.phoneNumber}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, phoneNumber: text })}
+                            />
+                            {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
+
+                            <TextInput
+                                style={[styles.input, errors.email ? styles.errorBorder : null]}
+                                placeholder="Email"
+                                value={editingClient.email}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, email: text })}
+                            />
+                            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+
+                            <TextInput
+                                style={[styles.input, errors.contactPersonName ? styles.errorBorder : null]}
+                                placeholder="Contact Person Name"
+                                value={editingClient.contactPersonName}
+                                onChangeText={(text) => setEditingClient({ ...editingClient, contactPersonName: text })}
+                            />
+                            {errors.contactPersonName && <Text style={styles.errorText}>{errors.contactPersonName}</Text>}
+
+                            <View style={styles.actionContainer}>
+                                <TouchableOpacity
+                                    style={styles.addButton}
+                                    onPress={handleSave}
+                                >
+                                    <Text style={styles.addButtonText}>Save</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.addButton, { backgroundColor: '#F20505' }]}
+                                    onPress={() => setEditingClient(null)}
+                                >
+                                    <Text style={styles.addButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -150,5 +273,36 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    input: {
+        height: 50,
+        borderColor: '#BBBFB4',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 15,
+        paddingHorizontal: 10,
+        fontSize: 16,
+        color: '#0D0D0D',
+        backgroundColor: '#F9F9F9',
+    },
+    errorBorder: {
+        borderColor: '#8B0000',
+    },
+    errorText: {
+        color: '#8B0000',
+        fontSize: 12,
+        marginBottom: 10,
+    },
+    addButton: {
+        backgroundColor: '#465954',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    addButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    Button,
+    Alert,
+} from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -24,6 +35,9 @@ const apiClient = axios.create({
 export default function ViewAllEmployees() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formState, setFormState] = useState<Employee | null>(null);
 
     const fetchEmployees = async () => {
         setLoading(true);
@@ -35,27 +49,56 @@ export default function ViewAllEmployees() {
                 ? error.response?.data || 'An error occurred while fetching employees'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit Employee with ID: ${id}`);
+    const handleEdit = (employee: Employee) => {
+        setSelectedEmployee(employee);
+        setFormState(employee);
+        setModalVisible(true);
+    };
+
+    const handleSave = async () => {
+        if (!formState) return;
+
+        try {
+            await apiClient.put(`/employees/${formState.employeeID}`, formState);
+            setEmployees((prevEmployees) =>
+                prevEmployees.map((emp) =>
+                    emp.employeeID === formState.employeeID ? { ...formState } : emp
+                )
+            );
+            Alert.alert('Success', 'Employee updated successfully!');
+            setModalVisible(false);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the employee'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await apiClient.delete(`/employees/${id}`);
             setEmployees((prevEmployees) => prevEmployees.filter((employee) => employee.employeeID !== id));
-            alert(`Deleted Employee with ID: ${id}`);
+            Alert.alert('Success', `Deleted Employee with ID: ${id}`);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? error.response?.data || 'An error occurred while deleting the employee'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
+    };
+
+    const handleInputChange = (field: keyof Employee, value: string) => {
+        if (formState) {
+            setFormState({ ...formState, [field]: value });
         }
     };
 
@@ -77,7 +120,7 @@ export default function ViewAllEmployees() {
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.employeeID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.employeeID)}>
@@ -104,6 +147,68 @@ export default function ViewAllEmployees() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+            <Modal visible={modalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Employee</Text>
+                        {formState && (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="First Name"
+                                    value={formState.firstName}
+                                    onChangeText={(text) => handleInputChange('firstName', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Last Name"
+                                    value={formState.lastName}
+                                    onChangeText={(text) => handleInputChange('lastName', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Position"
+                                    value={formState.position}
+                                    onChangeText={(text) => handleInputChange('position', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Phone Number"
+                                    value={formState.phoneNumber}
+                                    onChangeText={(text) => handleInputChange('phoneNumber', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Email"
+                                    value={formState.email}
+                                    onChangeText={(text) => handleInputChange('email', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Hire Date (YYYY-MM-DD)"
+                                    value={formState.hireDate || ''}
+                                    onChangeText={(text) => handleInputChange('hireDate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Salary"
+                                    value={formState.salary?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('salary', text)}
+                                />
+                                <View style={styles.modalActions}>
+                                    <Button
+                                        title="Cancel"
+                                        color="#8B0000"
+                                        onPress={() => setModalVisible(false)}
+                                    />
+                                    <Button title="Save" onPress={handleSave} />
+                                </View>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -132,11 +237,6 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     employeeContent: {
         flex: 1,
@@ -167,5 +267,40 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    input: {
+        height: 40,
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });

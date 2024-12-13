@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    Button,
+    Alert,
+} from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
@@ -22,6 +33,9 @@ const apiClient = axios.create({
 export default function ViewAllInvoices() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formState, setFormState] = useState<Invoice | null>(null);
 
     const fetchInvoices = async () => {
         setLoading(true);
@@ -33,27 +47,59 @@ export default function ViewAllInvoices() {
                 ? error.response?.data || 'An error occurred while fetching invoices'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit Invoice with ID: ${id}`);
+    const handleEdit = (invoice: Invoice) => {
+        setSelectedInvoice(invoice);
+        setFormState(invoice);
+        setModalVisible(true);
+    };
+
+    const handleSave = async () => {
+        if (!formState) return;
+
+        try {
+            await apiClient.put(`/invoices/${formState.invoiceID}`, formState);
+            setInvoices((prevInvoices) =>
+                prevInvoices.map((inv) =>
+                    inv.invoiceID === formState.invoiceID ? { ...formState } : inv
+                )
+            );
+            Alert.alert('Success', 'Invoice updated successfully!');
+            setModalVisible(false);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the invoice'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
         try {
             await apiClient.delete(`/invoices/${id}`);
             setInvoices((prevInvoices) => prevInvoices.filter((invoice) => invoice.invoiceID !== id));
-            alert(`Deleted Invoice with ID: ${id}`);
+            Alert.alert('Success', `Deleted Invoice with ID: ${id}`);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
                 ? error.response?.data || 'An error occurred while deleting the invoice'
                 : 'Unknown error occurred';
             console.error(errorMessage);
-            alert(errorMessage);
+            Alert.alert('Error', errorMessage);
+        }
+    };
+
+    const handleInputChange = (field: keyof Invoice, value: string) => {
+        if (formState) {
+            setFormState({
+                ...formState,
+                [field]: field === 'totalAmount' || field === 'saleID' ? Number(value) : value,
+            });
         }
     };
 
@@ -73,7 +119,7 @@ export default function ViewAllInvoices() {
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.invoiceID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.invoiceID)}>
@@ -100,6 +146,57 @@ export default function ViewAllInvoices() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+            <Modal visible={modalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Invoice</Text>
+                        {formState && (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Sale ID"
+                                    value={formState.saleID?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('saleID', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Invoice Date"
+                                    value={formState.invoiceDate || ''}
+                                    onChangeText={(text) => handleInputChange('invoiceDate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Payment Due Date"
+                                    value={formState.paymentDueDate || ''}
+                                    onChangeText={(text) => handleInputChange('paymentDueDate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Invoice Status"
+                                    value={formState.invoiceStatus}
+                                    onChangeText={(text) => handleInputChange('invoiceStatus', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Total Amount"
+                                    value={formState.totalAmount?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('totalAmount', text)}
+                                />
+                                <View style={styles.modalActions}>
+                                    <Button
+                                        title="Cancel"
+                                        color="#8B0000"
+                                        onPress={() => setModalVisible(false)}
+                                    />
+                                    <Button title="Save" onPress={handleSave} />
+                                </View>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -128,11 +225,6 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 10,
         marginBottom: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     invoiceContent: {
         flex: 1,
@@ -163,5 +255,36 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    input: {
+        height: 40,
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });
