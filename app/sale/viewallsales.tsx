@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 type Sale = {
     saleID: number;
     clientID?: number;
+    clientName: string;
+    clientNIP: string;
+    clientRegon: string;
     saleDate?: string;
     totalNetAmount?: number;
     totalVATAmount?: number;
@@ -12,36 +16,55 @@ type Sale = {
     saleStatus: string;
 };
 
-const dummySales: Sale[] = [
-    {
-        saleID: 1,
-        clientID: 101,
-        saleDate: '2024-12-19',
-        totalNetAmount: 1000,
-        totalVATAmount: 230,
-        totalGrossAmount: 1230,
-        saleStatus: 'Completed',
-    },
-    {
-        saleID: 2,
-        clientID: 102,
-        saleDate: '2024-12-20',
-        totalNetAmount: 2000,
-        totalVATAmount: 460,
-        totalGrossAmount: 2460,
-        saleStatus: 'Pending',
-    },
-];
-
 export default function ViewAllSales() {
-    const [sales] = useState<Sale[]>(dummySales);
+    const [sales, setSales] = useState<Sale[]>([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
-    const handleEdit = (saleID: number) => {
-        alert(`Edit sale with ID: ${saleID}`);
+    // Fetch sales data from backend
+    useEffect(() => {
+        fetchSales();
+    }, []);
+
+    const fetchSales = async () => {
+        try {
+            const response = await axios.get('http://localhost:5069/api/Sales');
+            setSales(response.data);
+        } catch (error) {
+            console.error('Error fetching sales:', error);
+        }
     };
 
-    const handleDelete = (saleID: number) => {
-        alert(`Delete sale with ID: ${saleID}`);
+    const handleEdit = (sale: Sale) => {
+        setSelectedSale(sale);
+        setIsEditing(true);
+    };
+
+    const handleSave = async () => {
+        if (selectedSale) {
+            try {
+                await axios.put(`http://localhost:5069/api/Sales/${selectedSale.saleID}`, selectedSale);
+                setSales((prevSales) =>
+                    prevSales.map((sale) =>
+                        sale.saleID === selectedSale.saleID ? selectedSale : sale
+                    )
+                );
+                setIsEditing(false);
+                setSelectedSale(null);
+            } catch (error) {
+                console.error('Error updating sale:', error);
+            }
+        }
+    };
+
+    const handleDelete = async (saleID: number) => {
+        try {
+            await axios.delete(`http://localhost:5069/api/Sales/${saleID}`);
+            setSales((prevSales) => prevSales.filter((sale) => sale.saleID !== saleID));
+            alert(`Sale ID ${saleID} deleted successfully!`);
+        } catch (error) {
+            console.error('Error deleting sale:', error);
+        }
     };
 
     const renderItem = ({ item }: { item: Sale }) => (
@@ -52,7 +75,9 @@ export default function ViewAllSales() {
                     <Text style={styles.saleTitle}>Sale ID: {item.saleID}</Text>
                 </View>
                 <View style={styles.cardDetails}>
-                    <Text style={styles.details}>Client ID: {item.clientID || 'N/A'}</Text>
+                    <Text style={styles.details}>Client Name: {item.clientName || 'N/A'}</Text>
+                    <Text style={styles.details}>NIP: {item.clientNIP || 'N/A'}</Text>
+                    <Text style={styles.details}>REGON: {item.clientRegon || 'N/A'}</Text>
                     <Text style={styles.details}>Date: {item.saleDate || 'N/A'}</Text>
                     <Text style={styles.details}>
                         Net Amount: ${item.totalNetAmount?.toFixed(2) || 'N/A'}
@@ -67,7 +92,7 @@ export default function ViewAllSales() {
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.saleID)}>
+                <TouchableOpacity onPress={() => handleEdit(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.saleID)}>
@@ -86,6 +111,93 @@ export default function ViewAllSales() {
                 keyExtractor={(item) => item.saleID.toString()}
                 contentContainerStyle={styles.listContainer}
             />
+
+            {/* Modal for editing */}
+            {isEditing && selectedSale && (
+                <Modal visible={isEditing} animationType="slide" transparent={true}>
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Edit Sale</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Client ID"
+                                value={selectedSale.clientID?.toString() || ''}
+                                keyboardType="numeric"
+                                onChangeText={(text) =>
+                                    setSelectedSale({
+                                        ...selectedSale,
+                                        clientID: parseInt(text) || undefined,
+                                    })
+                                }
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Sale Date (YYYY-MM-DD)"
+                                value={selectedSale.saleDate || ''}
+                                onChangeText={(text) =>
+                                    setSelectedSale({ ...selectedSale, saleDate: text })
+                                }
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Net Amount"
+                                value={selectedSale.totalNetAmount?.toString() || ''}
+                                keyboardType="numeric"
+                                onChangeText={(text) =>
+                                    setSelectedSale({
+                                        ...selectedSale,
+                                        totalNetAmount: parseFloat(text),
+                                    })
+                                }
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="VAT Amount"
+                                value={selectedSale.totalVATAmount?.toString() || ''}
+                                keyboardType="numeric"
+                                onChangeText={(text) =>
+                                    setSelectedSale({
+                                        ...selectedSale,
+                                        totalVATAmount: parseFloat(text),
+                                    })
+                                }
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Gross Amount"
+                                value={selectedSale.totalGrossAmount?.toString() || ''}
+                                keyboardType="numeric"
+                                onChangeText={(text) =>
+                                    setSelectedSale({
+                                        ...selectedSale,
+                                        totalGrossAmount: parseFloat(text),
+                                    })
+                                }
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Sale Status"
+                                value={selectedSale.saleStatus || ''}
+                                onChangeText={(text) =>
+                                    setSelectedSale({ ...selectedSale, saleStatus: text })
+                                }
+                            />
+                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                                <Text style={styles.saveButtonText}>Save Changes</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => {
+                                    setIsEditing(false);
+                                    setSelectedSale(null);
+                                }}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            )}
         </View>
     );
 }
@@ -149,5 +261,52 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    input: {
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        height: 50,
+        marginBottom: 10,
+    },
+    saveButton: {
+        backgroundColor: '#465954',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    saveButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    cancelButton: {
+        backgroundColor: '#CCC',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        color: '#0D0D0D',
+        fontSize: 16,
     },
 });

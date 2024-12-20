@@ -1,70 +1,150 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker'; // Dodany poprawny import
+import axios from 'axios';
+
+// Typ klienta
+type Client = {
+    clientID: number;
+    companyName: string;
+    nip: string;
+};
 
 export default function AddSale() {
     const [sale, setSale] = useState({
-        ClientID: '',
-        SaleDate: '',
+        ClientID: '', // ClientID jako string dla Picker
+        SaleDate: new Date(), // Domyślna wartość jako aktualna data
         TotalNetAmount: '',
         TotalVATAmount: '',
         TotalGrossAmount: '',
         SaleStatus: '',
     });
+    const [clients, setClients] = useState<Client[]>([]); // Lista klientów zdefiniowana z typem Client
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-    const handleInputChange = (field: keyof typeof sale, value: string) => {
+    // Fetch clients for dropdown
+    useEffect(() => {
+        axios
+            .get('http://localhost:5069/api/Clients')
+            .then((response) => setClients(response.data))
+            .catch((error) => console.error('Error fetching clients:', error));
+    }, []);
+
+    // Obsługa zmian w polach formularza
+    const handleInputChange = (field: keyof typeof sale, value: string | Date) => {
         setSale({ ...sale, [field]: value });
+    };
+
+    // Obsługa wysyłania danych do backendu
+    const handleSubmit = async () => {
+        try {
+            const payload = {
+                ClientID: parseInt(sale.ClientID), // Konwertuj na numer
+                SaleDate: sale.SaleDate.toISOString(), // ISO8601 do backendu
+                TotalNetAmount: parseFloat(sale.TotalNetAmount),
+                TotalVATAmount: parseFloat(sale.TotalVATAmount),
+                TotalGrossAmount: parseFloat(sale.TotalGrossAmount),
+                SaleStatus: sale.SaleStatus,
+            };
+            await axios.post('http://localhost:5069/api/Sales', payload);
+            alert('Sale added successfully!');
+        } catch (error: any) {
+            console.error('Error adding sale:', error.response?.data || error.message);
+        }
     };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Add New Sale</Text>
 
-            <TextInput
-                placeholder="Client ID"
-                style={styles.input}
-                value={sale.ClientID}
-                onChangeText={(text) => handleInputChange('ClientID', text)}
-            />
+            {/* Dropdown dla klientów */}
+            <Text style={styles.label}>Client</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={sale.ClientID}
+                    onValueChange={(value) => handleInputChange('ClientID', value.toString())}
+                >
+                    <Picker.Item label="Select a Client" value="" />
+                    {clients.map((client) => (
+                        <Picker.Item
+                            key={client.clientID}
+                            label={`${client.companyName} (${client.nip})`}
+                            value={client.clientID.toString()} // Przechowuj jako string
+                        />
+                    ))}
+                </Picker>
+            </View>
 
-            <TextInput
-                placeholder="Sale Date (YYYY-MM-DD)"
-                style={styles.input}
-                value={sale.SaleDate}
-                onChangeText={(text) => handleInputChange('SaleDate', text)}
-            />
+            {/* Date Picker */}
+            <Text style={styles.label}>Sale Date</Text>
+            <TouchableOpacity
+                style={styles.datePicker}
+                onPress={() => setShowDatePicker(true)}
+            >
+                <Text>{sale.SaleDate.toISOString().split('T')[0]}</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={sale.SaleDate} // Ustaw początkową wartość jako aktualną datę
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                        setShowDatePicker(false); // Zamknij picker
+                        if (selectedDate) {
+                            handleInputChange('SaleDate', selectedDate); // Aktualizuj stan
+                        }
+                    }}
+                />
+            )}
 
+            {/* Total Net Amount */}
+            <Text style={styles.label}>Total Net Amount</Text>
             <TextInput
-                placeholder="Total Net Amount"
+                placeholder="Enter Total Net Amount"
                 style={styles.input}
                 value={sale.TotalNetAmount}
                 keyboardType="numeric"
                 onChangeText={(text) => handleInputChange('TotalNetAmount', text)}
             />
 
+            {/* Total VAT Amount */}
+            <Text style={styles.label}>Total VAT Amount</Text>
             <TextInput
-                placeholder="Total VAT Amount"
+                placeholder="Enter Total VAT Amount"
                 style={styles.input}
                 value={sale.TotalVATAmount}
                 keyboardType="numeric"
                 onChangeText={(text) => handleInputChange('TotalVATAmount', text)}
             />
 
+            {/* Total Gross Amount */}
+            <Text style={styles.label}>Total Gross Amount</Text>
             <TextInput
-                placeholder="Total Gross Amount"
+                placeholder="Enter Total Gross Amount"
                 style={styles.input}
                 value={sale.TotalGrossAmount}
                 keyboardType="numeric"
                 onChangeText={(text) => handleInputChange('TotalGrossAmount', text)}
             />
 
+            {/* Sale Status */}
+            <Text style={styles.label}>Sale Status</Text>
             <TextInput
-                placeholder="Sale Status"
+                placeholder="Enter Sale Status"
                 style={styles.input}
                 value={sale.SaleStatus}
                 onChangeText={(text) => handleInputChange('SaleStatus', text)}
             />
 
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
                 <Text style={styles.addButtonText}>Add Sale</Text>
             </TouchableOpacity>
         </ScrollView>
@@ -82,6 +162,27 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+    },
+    label: {
+        alignSelf: 'flex-start',
+        fontSize: 16,
+        marginBottom: 5,
+        fontWeight: 'bold',
+    },
+    pickerContainer: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#CCC',
+        borderRadius: 8,
+        marginBottom: 15,
+    },
+    datePicker: {
+        width: '100%',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#CCC',
+        borderRadius: 8,
+        marginBottom: 15,
     },
     input: {
         width: '100%',
