@@ -116,7 +116,7 @@ export default function ViewAllEmployees() {
                     <Text style={styles.details}>Phone: {item.phoneNumber}</Text>
                     <Text style={styles.details}>Email: {item.email}</Text>
                     <Text style={styles.details}>Hire Date: {item.hireDate || 'N/A'}</Text>
-                    <Text style={styles.details}>Salary: ${item.salary?.toFixed(2) || 'N/A'}</Text>
+                    <Text style={styles.details}>Salary: {item.salary}</Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>

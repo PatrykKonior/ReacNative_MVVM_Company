@@ -5,32 +5,32 @@ import axios from 'axios';
 
 // Typy dla klienta
 interface Client {
-    CompanyName: string;
-    NIP: string;
-    Regon: string;
-    PhoneNumber: string;
-    Email: string;
-    ContactPerson: string;
+    companyName: string;
+    nip: string;
+    regon: string;
+    phoneNumber: string;
+    email: string;
+    contactPersonName: string;
 }
 
 // Typy dla błędów
 interface Errors {
-    CompanyName?: string;
-    NIP?: string;
-    Regon?: string;
-    PhoneNumber?: string;
-    Email?: string;
-    ContactPerson?: string;
+    companyName?: string;
+    nip?: string;
+    regon?: string;
+    phoneNumber?: string;
+    email?: string;
+    contactPersonName?: string;
 }
 
 export default function AddClient() {
     const [client, setClient] = useState<Client>({
-        CompanyName: '',
-        NIP: '',
-        Regon: '',
-        PhoneNumber: '',
-        Email: '',
-        ContactPerson: '',
+        companyName: '',
+        nip: '',
+        regon: '',
+        phoneNumber: '',
+        email: '',
+        contactPersonName: '',
     });
 
     const [errors, setErrors] = useState<Errors>({});
@@ -44,26 +44,26 @@ export default function AddClient() {
 
     const handleInputChange = (field: keyof Client, value: string) => {
         setClient({ ...client, [field]: value });
-        setErrors({ ...errors, [field]: '' }); // Usuwanie błędu dla danego pola
+        setErrors({ ...errors, [field]: '' });
     };
 
     const validateFields = (): boolean => {
         const newErrors: Partial<Errors> = {};
 
-        if (!client.CompanyName.trim()) newErrors.CompanyName = 'Company Name is required';
-        if (!client.NIP.trim()) newErrors.NIP = 'NIP is required';
-        else if (!/^[0-9]{10}$/.test(client.NIP)) newErrors.NIP = 'NIP must be a 10-digit number';
+        if (!client.companyName.trim()) newErrors.companyName = 'Company Name is required';
+        if (!client.nip.trim()) newErrors.nip = 'NIP is required';
+        else if (!/^[0-9]{10}$/.test(client.nip)) newErrors.nip = 'NIP must be a 10-digit number';
 
-        if (!client.Regon.trim()) newErrors.Regon = 'Regon is required';
-        else if (!/^[0-9]{9}$/.test(client.Regon)) newErrors.Regon = 'Regon must be a 9-digit number';
+        if (!client.regon.trim()) newErrors.regon = 'Regon is required';
+        else if (!/^[0-9]{9}$/.test(client.regon)) newErrors.regon = 'Regon must be a 9-digit number';
 
-        if (!client.PhoneNumber.trim()) newErrors.PhoneNumber = 'Phone Number is required';
-        else if (!/^\+?[0-9\- ]+$/.test(client.PhoneNumber)) newErrors.PhoneNumber = 'Invalid phone number format';
+        if (!client.phoneNumber.trim()) newErrors.phoneNumber = 'Phone Number is required';
+        else if (!/^\+?[0-9\- ]+$/.test(client.phoneNumber)) newErrors.phoneNumber = 'Invalid phone number format';
 
-        if (!client.Email.trim()) newErrors.Email = 'Email is required';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.Email)) newErrors.Email = 'Invalid email address';
+        if (!client.email.trim()) newErrors.email = 'Email is required';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.email)) newErrors.email = 'Invalid email address';
 
-        if (!client.ContactPerson.trim()) newErrors.ContactPerson = 'Contact Person is required';
+        if (!client.contactPersonName.trim()) newErrors.contactPersonName = 'Contact Person Name is required';
 
         setErrors(newErrors as Errors);
         return Object.keys(newErrors).length === 0;
@@ -73,8 +73,7 @@ export default function AddClient() {
         if (!validateFields()) return;
 
         try {
-            await apiClient.post('/clients', client);
-
+            await apiClient.post('/Clients', client); // Poprawiony endpoint
             Toast.show({
                 type: 'success',
                 text1: 'Success',
@@ -84,12 +83,12 @@ export default function AddClient() {
             });
 
             setClient({
-                CompanyName: '',
-                NIP: '',
-                Regon: '',
-                PhoneNumber: '',
-                Email: '',
-                ContactPerson: '',
+                companyName: '',
+                nip: '',
+                regon: '',
+                phoneNumber: '',
+                email: '',
+                contactPersonName: '',
             });
         } catch (error) {
             console.error('Error adding client:', error);
@@ -110,55 +109,55 @@ export default function AddClient() {
 
             <TextInput
                 placeholder="Company Name"
-                style={[styles.input, errors.CompanyName ? styles.errorBorder : null]}
-                value={client.CompanyName}
-                onChangeText={(text) => handleInputChange('CompanyName', text)}
+                style={[styles.input, errors.companyName ? styles.errorBorder : null]}
+                value={client.companyName}
+                onChangeText={(text) => handleInputChange('companyName', text)}
             />
-            {errors.CompanyName && <Text style={styles.errorText}>{errors.CompanyName}</Text>}
+            {errors.companyName && <Text style={styles.errorText}>{errors.companyName}</Text>}
 
             <TextInput
                 placeholder="NIP"
-                style={[styles.input, errors.NIP ? styles.errorBorder : null]}
-                value={client.NIP}
+                style={[styles.input, errors.nip ? styles.errorBorder : null]}
+                value={client.nip}
                 keyboardType="numeric"
-                onChangeText={(text) => handleInputChange('NIP', text)}
+                onChangeText={(text) => handleInputChange('nip', text)}
             />
-            {errors.NIP && <Text style={styles.errorText}>{errors.NIP}</Text>}
+            {errors.nip && <Text style={styles.errorText}>{errors.nip}</Text>}
 
             <TextInput
                 placeholder="Regon"
-                style={[styles.input, errors.Regon ? styles.errorBorder : null]}
-                value={client.Regon}
+                style={[styles.input, errors.regon ? styles.errorBorder : null]}
+                value={client.regon}
                 keyboardType="numeric"
-                onChangeText={(text) => handleInputChange('Regon', text)}
+                onChangeText={(text) => handleInputChange('regon', text)}
             />
-            {errors.Regon && <Text style={styles.errorText}>{errors.Regon}</Text>}
+            {errors.regon && <Text style={styles.errorText}>{errors.regon}</Text>}
 
             <TextInput
                 placeholder="Phone Number"
-                style={[styles.input, errors.PhoneNumber ? styles.errorBorder : null]}
-                value={client.PhoneNumber}
+                style={[styles.input, errors.phoneNumber ? styles.errorBorder : null]}
+                value={client.phoneNumber}
                 keyboardType="phone-pad"
-                onChangeText={(text) => handleInputChange('PhoneNumber', text)}
+                onChangeText={(text) => handleInputChange('phoneNumber', text)}
             />
-            {errors.PhoneNumber && <Text style={styles.errorText}>{errors.PhoneNumber}</Text>}
+            {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
 
             <TextInput
                 placeholder="Email"
-                style={[styles.input, errors.Email ? styles.errorBorder : null]}
-                value={client.Email}
+                style={[styles.input, errors.email ? styles.errorBorder : null]}
+                value={client.email}
                 keyboardType="email-address"
-                onChangeText={(text) => handleInputChange('Email', text)}
+                onChangeText={(text) => handleInputChange('email', text)}
             />
-            {errors.Email && <Text style={styles.errorText}>{errors.Email}</Text>}
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
             <TextInput
                 placeholder="Contact Person Name"
-                style={[styles.input, errors.ContactPerson ? styles.errorBorder : null]}
-                value={client.ContactPerson}
-                onChangeText={(text) => handleInputChange('ContactPerson', text)}
+                style={[styles.input, errors.contactPersonName ? styles.errorBorder : null]}
+                value={client.contactPersonName}
+                onChangeText={(text) => handleInputChange('contactPersonName', text)}
             />
-            {errors.ContactPerson && <Text style={styles.errorText}>{errors.ContactPerson}</Text>}
+            {errors.contactPersonName && <Text style={styles.errorText}>{errors.contactPersonName}</Text>}
 
             <TouchableOpacity style={styles.addButton} onPress={handleAddClient}>
                 <Text style={styles.addButtonText}>Add Client</Text>

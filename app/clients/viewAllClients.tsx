@@ -38,7 +38,7 @@ export default function ViewAllClients() {
     const fetchClients = async () => {
         setLoading(true);
         try {
-            const response = await apiClient.get<Client[]>('/clients');
+            const response = await apiClient.get<Client[]>('/Clients');
             setClients(response.data);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
@@ -73,7 +73,7 @@ export default function ViewAllClients() {
         }
 
         try {
-            await apiClient.put(`/clients/${editingClient.clientID}`, editingClient);
+            await apiClient.put(`/Clients/${editingClient.clientID}`, editingClient); // Poprawiony endpoint
             setEditingClient(null);
             fetchClients();
             alert('Client updated successfully!');
@@ -88,7 +88,7 @@ export default function ViewAllClients() {
 
     const handleDelete = async (id: number) => {
         try {
-            await apiClient.delete(`/clients/${id}`);
+            await apiClient.delete(`/Clients/${id}`);
             setClients((prevClients) => prevClients.filter((client) => client.clientID !== id));
             alert(`Deleted Client #${id}`);
         } catch (error) {

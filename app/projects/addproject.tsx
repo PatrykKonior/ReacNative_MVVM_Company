@@ -5,6 +5,7 @@ import axios from 'axios';
 
 // Typy dla projektu
 interface Project {
+    ProjectID?: number;
     ProjectName: string;
     ProjectType: string;
     ProjectStartDate: string;
@@ -14,6 +15,10 @@ interface Project {
     ProjectStatus: string;
     ClientID: string;
     ManagerID: string;
+    ClientName?: string;
+    ManagerFirstName?: string;
+    ManagerLastName?: string;
+    ManagerPosition?: string;
 }
 
 // Typy dla błędów
@@ -43,6 +48,7 @@ export default function AddProject() {
     });
 
     const [errors, setErrors] = useState<Errors>({});
+    const [isEditing, setIsEditing] = useState(false);
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -83,19 +89,31 @@ export default function AddProject() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleAddProject = async () => {
+    const handleSaveProject = async () => {
         if (!validateFields()) return;
 
         try {
-            await apiClient.post('/projects', project);
-
-            Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Project added successfully 🚀',
-                position: 'top',
-                visibilityTime: 4000,
-            });
+            if (isEditing && project.ProjectID) {
+                // Aktualizacja istniejącego projektu
+                await apiClient.put(`/Projects/${project.ProjectID}`, project);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: 'Project updated successfully 🚀',
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
+            } else {
+                // Tworzenie nowego projektu
+                await apiClient.post('/Projects', project);
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: 'Project added successfully 🚀',
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
+            }
 
             setProject({
                 ProjectName: '',
@@ -108,13 +126,14 @@ export default function AddProject() {
                 ClientID: '',
                 ManagerID: '',
             });
+            setIsEditing(false);
         } catch (error) {
-            console.error('Error adding project:', error);
+            console.error('Error saving project:', error);
 
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: 'Could not add project. Try again.',
+                text2: 'Could not save project. Try again.',
                 position: 'top',
                 visibilityTime: 4000,
             });
@@ -123,7 +142,7 @@ export default function AddProject() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Add New Project</Text>
+            <Text style={styles.title}>{isEditing ? 'Edit Project' : 'Add New Project'}</Text>
 
             <TextInput
                 placeholder="Project Name"
@@ -201,8 +220,8 @@ export default function AddProject() {
             />
             {errors.ManagerID && <Text style={styles.errorText}>{errors.ManagerID}</Text>}
 
-            <TouchableOpacity style={styles.addButton} onPress={handleAddProject}>
-                <Text style={styles.addButtonText}>Add Project</Text>
+            <TouchableOpacity style={styles.addButton} onPress={handleSaveProject}>
+                <Text style={styles.addButtonText}>{isEditing ? 'Save Changes' : 'Add Project'}</Text>
             </TouchableOpacity>
 
             <Toast />

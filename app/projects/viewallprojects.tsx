@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    Button,
+} from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
 type Project = {
     projectID: number;
-    clientID?: number;
     projectName: string;
     projectType: string;
     projectStartDate?: string;
@@ -13,6 +22,11 @@ type Project = {
     projectBudget?: number;
     vatRate?: number;
     projectStatus: string;
+    clientName?: string;
+    clientNIP?: string;
+    managerFirstName?: string;
+    managerLastName?: string;
+    managerPosition?: string;
 };
 
 const apiClient = axios.create({
@@ -25,11 +39,14 @@ const apiClient = axios.create({
 export default function ViewAllProjects() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formState, setFormState] = useState<Project | null>(null);
 
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const response = await apiClient.get<Project[]>('/projects');
+            const response = await apiClient.get<Project[]>('/Projects');
             setProjects(response.data);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
@@ -42,13 +59,36 @@ export default function ViewAllProjects() {
         }
     };
 
-    const handleEdit = (id: number) => {
-        alert(`Edit project with ID: ${id}`);
+    const handleEditPress = (project: Project) => {
+        setSelectedProject(project);
+        setFormState({ ...project });
+        setModalVisible(true);
+    };
+
+    const handleEditSave = async () => {
+        if (!formState) return;
+
+        try {
+            await apiClient.put(`/Projects/${formState.projectID}`, formState);
+            setProjects((prevProjects) =>
+                prevProjects.map((project) =>
+                    project.projectID === formState.projectID ? formState : project
+                )
+            );
+            alert('Project updated successfully!');
+            setModalVisible(false);
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while updating the project'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            alert(errorMessage);
+        }
     };
 
     const handleDelete = async (id: number) => {
         try {
-            await apiClient.delete(`/projects/${id}`);
+            await apiClient.delete(`/Projects/${id}`);
             setProjects((prevProjects) => prevProjects.filter((project) => project.projectID !== id));
             alert(`Deleted project with ID: ${id}`);
         } catch (error) {
@@ -57,6 +97,15 @@ export default function ViewAllProjects() {
                 : 'Unknown error occurred';
             console.error(errorMessage);
             alert(errorMessage);
+        }
+    };
+
+    const handleInputChange = (field: keyof Project, value: string) => {
+        if (formState) {
+            setFormState({
+                ...formState,
+                [field]: field === 'projectBudget' || field === 'vatRate' ? Number(value) : value,
+            });
         }
     };
 
@@ -74,11 +123,16 @@ export default function ViewAllProjects() {
                     <Text style={styles.details}>Budget: ${item.projectBudget?.toFixed(2) || 'N/A'}</Text>
                     <Text style={styles.details}>VAT: {item.vatRate || 0}%</Text>
                     <Text style={styles.details}>Status: {item.projectStatus}</Text>
-                    <Text style={styles.details}>Manager ID: {item.clientID || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Client: {item.clientName || 'N/A'} (NIP: {item.clientNIP || 'N/A'})
+                    </Text>
+                    <Text style={styles.details}>
+                        Manager: {item.managerFirstName || 'N/A'} {item.managerLastName || 'N/A'} ({item.managerPosition || 'N/A'})
+                    </Text>
                 </View>
             </View>
             <View style={styles.actionContainer}>
-                <TouchableOpacity onPress={() => handleEdit(item.projectID)}>
+                <TouchableOpacity onPress={() => handleEditPress(item)}>
                     <MaterialIcons name="edit" size={24} color="#0D0D0D" style={styles.actionIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleDelete(item.projectID)}>
@@ -105,6 +159,69 @@ export default function ViewAllProjects() {
                     contentContainerStyle={styles.listContainer}
                 />
             )}
+            <Modal visible={modalVisible} animationType="slide" transparent={true}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit Project</Text>
+                        {formState && (
+                            <>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Project Name"
+                                    value={formState.projectName}
+                                    onChangeText={(text) => handleInputChange('projectName', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Project Type"
+                                    value={formState.projectType}
+                                    onChangeText={(text) => handleInputChange('projectType', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Start Date (YYYY-MM-DD)"
+                                    value={formState.projectStartDate || ''}
+                                    onChangeText={(text) => handleInputChange('projectStartDate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="End Date (YYYY-MM-DD)"
+                                    value={formState.projectEndDate || ''}
+                                    onChangeText={(text) => handleInputChange('projectEndDate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Budget"
+                                    value={formState.projectBudget?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('projectBudget', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="VAT Rate"
+                                    value={formState.vatRate?.toString() || ''}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => handleInputChange('vatRate', text)}
+                                />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Status"
+                                    value={formState.projectStatus}
+                                    onChangeText={(text) => handleInputChange('projectStatus', text)}
+                                />
+                                <View style={styles.modalActions}>
+                                    <Button
+                                        title="Cancel"
+                                        color="#8B0000"
+                                        onPress={() => setModalVisible(false)}
+                                    />
+                                    <Button title="Save" onPress={handleEditSave} />
+                                </View>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -168,5 +285,36 @@ const styles = StyleSheet.create({
     },
     actionIcon: {
         marginLeft: 15,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    input: {
+        height: 40,
+        borderColor: '#CCC',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
+    modalActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });

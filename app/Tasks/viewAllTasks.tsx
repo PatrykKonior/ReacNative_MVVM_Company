@@ -111,6 +111,10 @@ export default function ViewAllTasks() {
                 <Text style={styles.taskDescription}>{item.taskDescription}</Text>
                 <Text style={styles.taskStatus}>Status: {item.taskStatus}</Text>
                 <Text style={styles.taskHours}>Estimated Hours: {item.estimatedHours || '0'}</Text>
+                <Text style={styles.details}>Project ID: {item.projectID || 'N/A'}</Text>
+                <Text style={styles.details}>Assigned Employee ID: {item.assignedEmployeeID || 'N/A'}</Text>
+                <Text style={styles.details}>Start Date: {item.taskStartDate || 'N/A'}</Text>
+                <Text style={styles.details}>End Date: {item.taskEndDate || 'N/A'}</Text>
             </View>
             <View style={styles.actionContainer}>
                 <TouchableOpacity onPress={() => handleEdit(item)}>
@@ -242,6 +246,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#F20505',
         marginTop: 10,
+    },
+    details: {
+        fontSize: 14,
+        color: '#0D0D0D',
+        marginTop: 5,
     },
     taskHours: {
         fontSize: 14,
