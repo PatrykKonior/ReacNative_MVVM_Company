@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-type RoutePaths = "/clients" | "/projects" | "/employees" | "/departments" | "/invoices" | "/materials" | "/Tasks" | "/timeLogs" | "/settings";
+type RoutePaths = "/clients" | "/projects" | "/employees" | "/departments" | "/invoices" | "/materials" | "/Tasks" | "/timeLogs" | "/settings" | "/sale" | "/payments";
 
 const categories: Array<{
     id: string;
@@ -14,13 +14,15 @@ const categories: Array<{
 }> = [
     { id: '1', title: 'Clients', icon: 'users', iconFamily: FontAwesome5, route: '/clients' },
     { id: '2', title: 'Projects', icon: 'briefcase', iconFamily: FontAwesome5, route: '/projects' },
-    { id: '3', title: 'Employees', icon: 'people', iconFamily: MaterialIcons, route: '/employees' },
-    { id: '4', title: 'Departments', icon: 'building', iconFamily: FontAwesome5, route: '/departments' },
-    { id: '5', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5, route: '/invoices' },
-    { id: '6', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5, route: '/materials' },
-    { id: '7', title: 'Tasks', icon: 'tasks', iconFamily: FontAwesome5, route: '/Tasks' },
-    { id: '8', title: 'Time Logs', icon: 'clock', iconFamily: FontAwesome5, route: '/timeLogs' },
-    { id: '9', title: 'Settings', icon: 'cogs', iconFamily: FontAwesome5, route: '/settings' },
+    { id: '3', title: 'Sales', icon: 'chart-line', iconFamily: FontAwesome5, route: '/sale' },
+    { id: '4', title: 'Payments', icon: 'money-check-alt', iconFamily: FontAwesome5, route: '/payments' },
+    { id: '5', title: 'Employees', icon: 'people', iconFamily: MaterialIcons, route: '/employees' },
+    { id: '6', title: 'Departments', icon: 'building', iconFamily: FontAwesome5, route: '/departments' },
+    { id: '7', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5, route: '/invoices' },
+    { id: '8', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5, route: '/materials' },
+    { id: '9', title: 'Tasks', icon: 'tasks', iconFamily: FontAwesome5, route: '/Tasks' },
+    { id: '10', title: 'Time Logs', icon: 'clock', iconFamily: FontAwesome5, route: '/timeLogs' },
+    { id: '11', title: 'Settings', icon: 'cogs', iconFamily: FontAwesome5, route: '/settings' },
 ];
 
 export default function CategoriesScreen() {
