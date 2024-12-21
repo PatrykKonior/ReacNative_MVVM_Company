@@ -102,7 +102,9 @@ export default function ViewAllTimeLogs() {
             <View style={styles.recordContent}>
                 <Text style={styles.recordTitle}>Employee ID: {item.employeeID}</Text>
                 <Text style={styles.recordSubTitle}>Project ID: {item.projectID}</Text>
-                <Text style={styles.recordSubTitle}>Date: {item.logDate}</Text>
+                <Text style={styles.recordSubTitle}>
+                    Date: {item.logDate ? item.logDate.split('T')[0] : 'N/A'}
+                </Text>
                 <Text style={styles.recordSubTitle}>
                     Hours: {item.hoursWorked || 0}, Rate: ${item.hourlyRate || 0}/hr
                 </Text>
@@ -159,7 +161,7 @@ export default function ViewAllTimeLogs() {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Log Date (YYYY-MM-DD)"
-                                    value={formState.logDate || ''}
+                                    value={formState?.logDate ? formState.logDate.split('T')[0] : ''} // Formatowanie daty
                                     onChangeText={(text) => handleInputChange('logDate', text)}
                                 />
                                 <TextInput

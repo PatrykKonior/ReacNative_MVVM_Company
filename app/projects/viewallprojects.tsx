@@ -118,8 +118,12 @@ export default function ViewAllProjects() {
                 </View>
                 <View style={styles.cardDetails}>
                     <Text style={styles.details}>Type: {item.projectType}</Text>
-                    <Text style={styles.details}>Start: {item.projectStartDate || 'N/A'}</Text>
-                    <Text style={styles.details}>End: {item.projectEndDate || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Start: {item.projectStartDate ? item.projectStartDate.split('T')[0] : 'N/A'}
+                    </Text>
+                    <Text style={styles.details}>
+                        End: {item.projectEndDate ? item.projectEndDate.split('T')[0] : 'N/A'}
+                    </Text>
                     <Text style={styles.details}>Budget: ${item.projectBudget?.toFixed(2) || 'N/A'}</Text>
                     <Text style={styles.details}>VAT: {item.vatRate || 0}%</Text>
                     <Text style={styles.details}>Status: {item.projectStatus}</Text>
@@ -180,13 +184,13 @@ export default function ViewAllProjects() {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Start Date (YYYY-MM-DD)"
-                                    value={formState.projectStartDate || ''}
+                                    value={formState.projectStartDate ? formState.projectStartDate.split('T')[0] : ''} // Usuwa T00:00:00
                                     onChangeText={(text) => handleInputChange('projectStartDate', text)}
                                 />
                                 <TextInput
                                     style={styles.input}
                                     placeholder="End Date (YYYY-MM-DD)"
-                                    value={formState.projectEndDate || ''}
+                                    value={formState.projectEndDate ? formState.projectEndDate.split('T')[0] : ''} // Usuwa T00:00:00
                                     onChangeText={(text) => handleInputChange('projectEndDate', text)}
                                 />
                                 <TextInput

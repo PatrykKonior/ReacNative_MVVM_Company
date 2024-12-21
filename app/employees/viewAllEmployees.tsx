@@ -115,7 +115,9 @@ export default function ViewAllEmployees() {
                     <Text style={styles.details}>Position: {item.position}</Text>
                     <Text style={styles.details}>Phone: {item.phoneNumber}</Text>
                     <Text style={styles.details}>Email: {item.email}</Text>
-                    <Text style={styles.details}>Hire Date: {item.hireDate || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Hire Date: {item.hireDate ? item.hireDate.split('T')[0] : 'N/A'}
+                    </Text>
                     <Text style={styles.details}>Salary: {item.salary}</Text>
                 </View>
             </View>
@@ -186,7 +188,7 @@ export default function ViewAllEmployees() {
                                 <TextInput
                                     style={styles.input}
                                     placeholder="Hire Date (YYYY-MM-DD)"
-                                    value={formState.hireDate || ''}
+                                    value={formState?.hireDate ? formState.hireDate.split('T')[0] : ''} // Usuwamy czas
                                     onChangeText={(text) => handleInputChange('hireDate', text)}
                                 />
                                 <TextInput

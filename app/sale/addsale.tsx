@@ -10,6 +10,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker'; // Dodany poprawny import
 import axios from 'axios';
+import { Alert } from 'react-native';
 
 // Typ klienta
 type Client = {
@@ -45,6 +46,17 @@ export default function AddSale() {
 
     // Obsługa wysyłania danych do backendu
     const handleSubmit = async () => {
+        if (
+            !sale.ClientID ||
+            !sale.TotalNetAmount ||
+            !sale.TotalVATAmount ||
+            !sale.TotalGrossAmount ||
+            !sale.SaleStatus
+        ) {
+            Alert.alert('Validation Error', 'All fields are required.', [{ text: 'OK' }]);
+            return; // Zakończ funkcję, jeśli walidacja nie powiedzie się
+        }
+
         try {
             const payload = {
                 ClientID: parseInt(sale.ClientID), // Konwertuj na numer
@@ -55,9 +67,26 @@ export default function AddSale() {
                 SaleStatus: sale.SaleStatus,
             };
             await axios.post('http://localhost:5069/api/Sales', payload);
-            alert('Sale added successfully!');
+            Alert.alert('Success', 'Sale added successfully!', [{ text: 'OK' }]);
+
+            // Resetowanie formularza
+            setSale({
+                ClientID: '',
+                SaleDate: new Date(),
+                TotalNetAmount: '',
+                TotalVATAmount: '',
+                TotalGrossAmount: '',
+                SaleStatus: '',
+            });
         } catch (error: any) {
             console.error('Error adding sale:', error.response?.data || error.message);
+
+            // Powiadomienie o błędzie
+            Alert.alert(
+                'Error',
+                error.response?.data || 'Failed to add sale. Please try again later.',
+                [{ text: 'OK' }]
+            );
         }
     };
 

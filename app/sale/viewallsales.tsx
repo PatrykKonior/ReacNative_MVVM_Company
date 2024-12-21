@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { Alert } from 'react-native';
 
 type Sale = {
     saleID: number;
@@ -31,7 +32,11 @@ export default function ViewAllSales() {
             const response = await axios.get('http://localhost:5069/api/Sales');
             setSales(response.data);
         } catch (error) {
-            console.error('Error fetching sales:', error);
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while fetching sales'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage);
         }
     };
 
@@ -49,10 +54,15 @@ export default function ViewAllSales() {
                         sale.saleID === selectedSale.saleID ? selectedSale : sale
                     )
                 );
+                Alert.alert('Success', 'Sale updated successfully!');
                 setIsEditing(false);
                 setSelectedSale(null);
             } catch (error) {
-                console.error('Error updating sale:', error);
+                const errorMessage = axios.isAxiosError(error)
+                    ? error.response?.data || 'An error occurred while updating the sale'
+                    : 'Unknown error occurred';
+                console.error(errorMessage);
+                Alert.alert('Error', errorMessage); // Powiadomienie o błędzie
             }
         }
     };
@@ -61,9 +71,13 @@ export default function ViewAllSales() {
         try {
             await axios.delete(`http://localhost:5069/api/Sales/${saleID}`);
             setSales((prevSales) => prevSales.filter((sale) => sale.saleID !== saleID));
-            alert(`Sale ID ${saleID} deleted successfully!`);
+            Alert.alert('Success', `Sale ID ${saleID} deleted successfully!`);
         } catch (error) {
-            console.error('Error deleting sale:', error);
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data || 'An error occurred while deleting the sale'
+                : 'Unknown error occurred';
+            console.error(errorMessage);
+            Alert.alert('Error', errorMessage); // Powiadomienie o błędzie
         }
     };
 
@@ -78,7 +92,9 @@ export default function ViewAllSales() {
                     <Text style={styles.details}>Client Name: {item.clientName || 'N/A'}</Text>
                     <Text style={styles.details}>NIP: {item.clientNIP || 'N/A'}</Text>
                     <Text style={styles.details}>REGON: {item.clientRegon || 'N/A'}</Text>
-                    <Text style={styles.details}>Date: {item.saleDate || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Date: {item.saleDate ? item.saleDate.split('T')[0] : 'N/A'}
+                    </Text>
                     <Text style={styles.details}>
                         Net Amount: ${item.totalNetAmount?.toFixed(2) || 'N/A'}
                     </Text>
@@ -112,7 +128,7 @@ export default function ViewAllSales() {
                 contentContainerStyle={styles.listContainer}
             />
 
-            {/* Modal for editing */}
+            {/* Edycja */}
             {isEditing && selectedSale && (
                 <Modal visible={isEditing} animationType="slide" transparent={true}>
                     <View style={styles.modalContainer}>
@@ -133,7 +149,7 @@ export default function ViewAllSales() {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Sale Date (YYYY-MM-DD)"
-                                value={selectedSale.saleDate || ''}
+                                value={selectedSale?.saleDate ? selectedSale.saleDate.split('T')[0] : ''}
                                 onChangeText={(text) =>
                                     setSelectedSale({ ...selectedSale, saleDate: text })
                                 }

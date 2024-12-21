@@ -113,8 +113,12 @@ export default function ViewAllTasks() {
                 <Text style={styles.taskHours}>Estimated Hours: {item.estimatedHours || '0'}</Text>
                 <Text style={styles.details}>Project ID: {item.projectID || 'N/A'}</Text>
                 <Text style={styles.details}>Assigned Employee ID: {item.assignedEmployeeID || 'N/A'}</Text>
-                <Text style={styles.details}>Start Date: {item.taskStartDate || 'N/A'}</Text>
-                <Text style={styles.details}>End Date: {item.taskEndDate || 'N/A'}</Text>
+                <Text style={styles.details}>
+                    Start Date: {item.taskStartDate ? item.taskStartDate.split('T')[0] : 'N/A'}
+                </Text>
+                <Text style={styles.details}>
+                    End Date: {item.taskEndDate ? item.taskEndDate.split('T')[0] : 'N/A'}
+                </Text>
             </View>
             <View style={styles.actionContainer}>
                 <TouchableOpacity onPress={() => handleEdit(item)}>

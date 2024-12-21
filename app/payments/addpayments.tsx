@@ -10,6 +10,8 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
+import { Alert } from 'react-native';
+
 
 // Typ faktury
 type Invoice = {
@@ -61,10 +63,26 @@ export default function AddPayments() {
             };
 
             await axios.post('http://localhost:5069/api/Payments', payload);
-            alert('Payment added successfully!');
+            Alert.alert(
+                'Success', // Nagłówek
+                'Payment added successfully!', // Treść
+                [{ text: 'OK' }] // Przyciski
+            );
+            setPayment({
+                invoiceID: '',
+                paymentDate: new Date(),
+                paymentAmount: '',
+                paymentMethod: '',
+            });
         } catch (error: any) {
             console.error('Error adding payment:', error.response?.data || error.message);
-            alert('Failed to add payment.');
+
+            // Powiadomienie o błędzie
+            Alert.alert(
+                'Error', // Nagłówek
+                error.response?.data || 'Failed to add payment.', // Treść błędu
+                [{ text: 'OK' }] // Przyciski
+            );
         }
     };
 

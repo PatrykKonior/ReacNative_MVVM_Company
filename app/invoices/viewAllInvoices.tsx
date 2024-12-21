@@ -112,8 +112,12 @@ export default function ViewAllInvoices() {
                 </View>
                 <View style={styles.cardDetails}>
                     <Text style={styles.details}>Sale ID: {item.saleID || 'N/A'}</Text>
-                    <Text style={styles.details}>Invoice Date: {item.invoiceDate || 'N/A'}</Text>
-                    <Text style={styles.details}>Due Date: {item.paymentDueDate || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Invoice Date: {item.invoiceDate ? item.invoiceDate.split('T')[0] : 'N/A'}
+                    </Text>
+                    <Text style={styles.details}>
+                        Due Date: {item.paymentDueDate ? item.paymentDueDate.split('T')[0] : 'N/A'}
+                    </Text>
                     <Text style={styles.details}>Status: {item.invoiceStatus}</Text>
                     <Text style={styles.details}>Amount: ${item.totalAmount?.toFixed(2) || '0.00'}</Text>
                 </View>
@@ -161,14 +165,14 @@ export default function ViewAllInvoices() {
                                 />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Invoice Date"
-                                    value={formState.invoiceDate || ''}
+                                    placeholder="Invoice Date (YYYY-MM-DD)"
+                                    value={formState?.invoiceDate ? formState.invoiceDate.split('T')[0] : ''} // Formatowanie daty
                                     onChangeText={(text) => handleInputChange('invoiceDate', text)}
                                 />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Payment Due Date"
-                                    value={formState.paymentDueDate || ''}
+                                    placeholder="Payment Due Date (YYYY-MM-DD)"
+                                    value={formState?.paymentDueDate ? formState.paymentDueDate.split('T')[0] : ''} // Formatowanie daty
                                     onChangeText={(text) => handleInputChange('paymentDueDate', text)}
                                 />
                                 <TextInput

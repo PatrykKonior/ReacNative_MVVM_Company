@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { Alert } from 'react-native';
+
 
 // Typ dla płatności
 type Payment = {
@@ -37,7 +39,7 @@ export default function ViewAllPayments() {
             const response = await axios.get('http://localhost:5069/api/Payments');
             setPayments(response.data);
         } catch (error) {
-            console.error('Error fetching payments:', error);
+            Alert.alert('Error', 'Failed to fetch payments. Please try again later.', [{ text: 'OK' }]);
         }
     };
 
@@ -54,6 +56,8 @@ export default function ViewAllPayments() {
                     `http://localhost:5069/api/Payments/${selectedPayment.paymentID}`,
                     selectedPayment
                 );
+
+                // Aktualizacja listy płatności
                 setPayments((prevPayments) =>
                     prevPayments.map((payment) =>
                         payment.paymentID === selectedPayment.paymentID
@@ -61,26 +65,59 @@ export default function ViewAllPayments() {
                             : payment
                     )
                 );
+
+                Alert.alert('Success', 'Payment updated successfully!', [{ text: 'OK' }]); // Alert sukcesu
                 setIsEditing(false);
                 setSelectedPayment(null);
             } catch (error) {
                 console.error('Error updating payment:', error);
+                Alert.alert(
+                    'Error',
+                    'Failed to update payment. Please try again later.',
+                    [{ text: 'OK' }]
+                );
             }
         }
     };
 
     // Usuwanie
     const handleDelete = async (paymentID: number) => {
-        try {
-            await axios.delete(`http://localhost:5069/api/Payments/${paymentID}`);
-            setPayments((prevPayments) =>
-                prevPayments.filter((payment) => payment.paymentID !== paymentID)
-            );
-            alert(`Payment ID ${paymentID} deleted successfully!`);
-        } catch (error) {
-            console.error('Error deleting payment:', error);
-        }
+        Alert.alert(
+            'Confirm Deletion',
+            `Are you sure you want to delete Payment ID ${paymentID}?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await axios.delete(
+                                `http://localhost:5069/api/Payments/${paymentID}`
+                            );
+                            setPayments((prevPayments) =>
+                                prevPayments.filter((payment) => payment.paymentID !== paymentID)
+                            );
+                            Alert.alert('Success', `Payment ID ${paymentID} deleted successfully!`, [
+                                { text: 'OK' },
+                            ]);
+                        } catch (error) {
+                            console.error('Error deleting payment:', error);
+                            Alert.alert(
+                                'Error',
+                                'Failed to delete payment. Please try again later.',
+                                [{ text: 'OK' }]
+                            );
+                        }
+                    },
+                },
+            ]
+        );
     };
+
 
     // Wyświetlenie pojedynczego elementu
     const renderItem = ({ item }: { item: Payment }) => (
@@ -91,13 +128,15 @@ export default function ViewAllPayments() {
                     <Text style={styles.saleTitle}>Payment ID: {item.paymentID}</Text>
                 </View>
                 <View style={styles.cardDetails}>
-                    <Text style={styles.details}>Invoice Date: {item.invoiceDate || 'N/A'}</Text>
+                    <Text style={styles.details}>
+                        Invoice Date: {item.invoiceDate ? item.invoiceDate.split('T')[0] : 'N/A'}
+                    </Text>
                     <Text style={styles.details}>Status: {item.invoiceStatus || 'N/A'}</Text>
                     <Text style={styles.details}>
                         Total Amount: ${item.totalAmount?.toFixed(2) || 'N/A'}
                     </Text>
                     <Text style={styles.details}>
-                        Payment Date: {item.paymentDate || 'N/A'}
+                        Payment Date: {item.paymentDate ? item.paymentDate.split('T')[0] : 'N/A'}
                     </Text>
                     <Text style={styles.details}>
                         Payment Amount: ${item.paymentAmount?.toFixed(2) || 'N/A'}
