@@ -1,94 +1,137 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import Toast from 'react-native-toast-message';
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import axios from 'axios';
 
-interface Payment {
+// Typ faktury
+type Invoice = {
+    invoiceID: number;
+    invoiceDate?: string;
+    invoiceStatus?: string;
+    totalAmount?: number;
+};
+
+// Typ płatności
+type Payment = {
     invoiceID: string;
-    paymentDate: string;
+    paymentDate: Date;
     paymentAmount: string;
     paymentMethod: string;
-}
-
-interface Errors {
-    invoiceID?: string;
-    paymentDate?: string;
-    paymentAmount?: string;
-    paymentMethod?: string;
-}
+};
 
 export default function AddPayments() {
     const [payment, setPayment] = useState<Payment>({
         invoiceID: '',
-        paymentDate: '',
+        paymentDate: new Date(),
         paymentAmount: '',
         paymentMethod: '',
     });
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-    const [errors, setErrors] = useState<Errors>({});
+    // Pobierz faktury dla dropdown
+    useEffect(() => {
+        axios
+            .get('http://localhost:5069/api/Invoices')
+            .then((response) => setInvoices(response.data))
+            .catch((error) => console.error('Error fetching invoices:', error));
+    }, []);
 
-    const validateFields = (): boolean => {
-        const newErrors: Errors = {};
-        if (!payment.invoiceID.trim()) newErrors.invoiceID = 'Invoice ID is required';
-        if (!payment.paymentDate.trim()) newErrors.paymentDate = 'Payment Date is required';
-        if (!/\d{4}-\d{2}-\d{2}/.test(payment.paymentDate))
-            newErrors.paymentDate = 'Invalid date format (YYYY-MM-DD)';
-        if (!payment.paymentAmount.trim()) newErrors.paymentAmount = 'Payment Amount is required';
-        if (isNaN(Number(payment.paymentAmount))) newErrors.paymentAmount = 'Amount must be a number';
-        if (!payment.paymentMethod.trim()) newErrors.paymentMethod = 'Payment Method is required';
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+    // Obsługuje zmiany w formularzu
+    const handleInputChange = (field: keyof Payment, value: string | Date) => {
+        setPayment({ ...payment, [field]: value });
     };
 
-    const handleAddPayment = () => {
-        if (!validateFields()) return;
-        Toast.show({
-            type: 'success',
-            text1: 'Payment added successfully!',
-        });
-        setPayment({ invoiceID: '', paymentDate: '', paymentAmount: '', paymentMethod: '' });
+    // Obsługuje dodawanie płatności
+    const handleSubmit = async () => {
+        try {
+            const payload = {
+                InvoiceID: parseInt(payment.invoiceID),
+                PaymentDate: payment.paymentDate.toISOString(),
+                PaymentAmount: parseFloat(payment.paymentAmount),
+                PaymentMethod: payment.paymentMethod,
+            };
+
+            await axios.post('http://localhost:5069/api/Payments', payload);
+            alert('Payment added successfully!');
+        } catch (error: any) {
+            console.error('Error adding payment:', error.response?.data || error.message);
+            alert('Failed to add payment.');
+        }
     };
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Add New Payment</Text>
-            <TextInput
-                placeholder="Invoice ID"
-                style={[styles.input, errors.invoiceID ? styles.errorBorder : null]}
-                value={payment.invoiceID}
-                onChangeText={(text) => setPayment({ ...payment, invoiceID: text })}
-            />
-            {errors.invoiceID && <Text style={styles.errorText}>{errors.invoiceID}</Text>}
 
-            <TextInput
-                placeholder="Payment Date (YYYY-MM-DD)"
-                style={[styles.input, errors.paymentDate ? styles.errorBorder : null]}
-                value={payment.paymentDate}
-                onChangeText={(text) => setPayment({ ...payment, paymentDate: text })}
-            />
-            {errors.paymentDate && <Text style={styles.errorText}>{errors.paymentDate}</Text>}
+            {/* Dropdown dla faktur */}
+            <Text style={styles.label}>Invoice</Text>
+            <View style={styles.pickerContainer}>
+                <Picker
+                    selectedValue={payment.invoiceID}
+                    onValueChange={(value) => handleInputChange('invoiceID', value.toString())}
+                >
+                    <Picker.Item label="Select an Invoice" value="" />
+                    {invoices.map((invoice) => (
+                        <Picker.Item
+                            key={invoice.invoiceID}
+                            label={`ID: ${invoice.invoiceID} | ${invoice.invoiceStatus} | $${invoice.totalAmount}`}
+                            value={invoice.invoiceID.toString()}
+                        />
+                    ))}
+                </Picker>
+            </View>
 
-            <TextInput
-                placeholder="Payment Amount"
-                style={[styles.input, errors.paymentAmount ? styles.errorBorder : null]}
-                value={payment.paymentAmount}
-                keyboardType="numeric"
-                onChangeText={(text) => setPayment({ ...payment, paymentAmount: text })}
-            />
-            {errors.paymentAmount && <Text style={styles.errorText}>{errors.paymentAmount}</Text>}
-
-            <TextInput
-                placeholder="Payment Method"
-                style={[styles.input, errors.paymentMethod ? styles.errorBorder : null]}
-                value={payment.paymentMethod}
-                onChangeText={(text) => setPayment({ ...payment, paymentMethod: text })}
-            />
-            {errors.paymentMethod && <Text style={styles.errorText}>{errors.paymentMethod}</Text>}
-
-            <TouchableOpacity style={styles.button} onPress={handleAddPayment}>
-                <Text style={styles.buttonText}>Add Payment</Text>
+            {/* Data płatności */}
+            <Text style={styles.label}>Payment Date</Text>
+            <TouchableOpacity
+                style={styles.datePicker}
+                onPress={() => setShowDatePicker(true)}
+            >
+                <Text>{payment.paymentDate.toISOString().split('T')[0]}</Text>
             </TouchableOpacity>
-            <Toast />
+            {showDatePicker && (
+                <DateTimePicker
+                    value={payment.paymentDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, date) => {
+                        setShowDatePicker(false);
+                        if (date) handleInputChange('paymentDate', date);
+                    }}
+                />
+            )}
+
+            {/* Kwota płatności */}
+            <Text style={styles.label}>Payment Amount</Text>
+            <TextInput
+                placeholder="Enter Payment Amount"
+                style={styles.input}
+                keyboardType="numeric"
+                value={payment.paymentAmount}
+                onChangeText={(text) => handleInputChange('paymentAmount', text)}
+            />
+
+            {/* Metoda płatności */}
+            <Text style={styles.label}>Payment Method</Text>
+            <TextInput
+                placeholder="Enter Payment Method"
+                style={styles.input}
+                value={payment.paymentMethod}
+                onChangeText={(text) => handleInputChange('paymentMethod', text)}
+            />
+
+            <TouchableOpacity style={styles.addButton} onPress={handleSubmit}>
+                <Text style={styles.addButtonText}>Add Payment</Text>
+            </TouchableOpacity>
         </ScrollView>
     );
 }
@@ -104,6 +147,28 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
+        color: '#465954',
+    },
+    label: {
+        alignSelf: 'flex-start',
+        fontSize: 16,
+        marginBottom: 5,
+        fontWeight: 'bold',
+    },
+    pickerContainer: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#CCC',
+        borderRadius: 8,
+        marginBottom: 15,
+    },
+    datePicker: {
+        width: '100%',
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#CCC',
+        borderRadius: 8,
+        marginBottom: 15,
     },
     input: {
         width: '100%',
@@ -114,15 +179,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 15,
     },
-    errorBorder: {
-        borderColor: 'red',
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 12,
-        alignSelf: 'flex-start',
-    },
-    button: {
+    addButton: {
         backgroundColor: '#465954',
         padding: 15,
         borderRadius: 8,
@@ -130,7 +187,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginVertical: 10,
     },
-    buttonText: {
+    addButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
