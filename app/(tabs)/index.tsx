@@ -1,17 +1,42 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons'; // Biblioteka ikon
+import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function HomePage() {
+    type RoutePaths =
+        "/clients" |
+        "/projects" |
+        "/employees" |
+        "/departments" |
+        "/invoices" |
+        "/materials" |
+        "/Tasks" |
+        "/timeLogs" |
+        "/settings" |
+        "/sale" |
+        "/payments";
+
+    const router = useRouter(); // Inicjalizacja routera
+
+    // Funkcja do nawigacji
+    const navigateTo = (route: RoutePaths) => {
+        router.push(route); // Przekierowanie do wybranej ścieżki
+    };
+
     const renderTile = (
         title: string,
         subtitle: string,
         backgroundColor: string,
         circleColor: string,
         iconName: string,
-        IconComponent: any
+        IconComponent: any,
+        route: RoutePaths
     ) => (
-        <TouchableOpacity style={[styles.tile, { backgroundColor }]}>
+        <TouchableOpacity
+            style={[styles.tile, { backgroundColor }]}
+            onPress={() => navigateTo(route)} // Obsługa kliknięcia
+        >
             <View style={[styles.circle, { backgroundColor: circleColor }]}>
                 <IconComponent name={iconName} size={24} color="#FFFFFF" />
             </View>
@@ -32,7 +57,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#0D2618',
                     'notifications',
-                    MaterialIcons
+                    MaterialIcons,
+                    '/invoices' // DO NAPRAWY
                 )}
                 {renderTile(
                     'Messages',
@@ -40,7 +66,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#465954',
                     'message',
-                    MaterialIcons
+                    MaterialIcons,
+                    '/invoices' // DO NAPRAWY
                 )}
                 {renderTile(
                     'Announcements',
@@ -48,7 +75,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#BBBFB4',
                     'announcement',
-                    MaterialIcons
+                    MaterialIcons,
+                    '/invoices' // DO NAPRAWY
                 )}
             </View>
 
@@ -65,7 +93,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#BBBFB4',
                     'file-invoice-dollar',
-                    FontAwesome5
+                    FontAwesome5,
+                    '/invoices'
                 )}
                 {renderTile(
                     'Clients',
@@ -73,7 +102,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#465954',
                     'users',
-                    FontAwesome5
+                    FontAwesome5,
+                    '/clients'
                 )}
             </View>
             <View style={styles.row}>
@@ -83,7 +113,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#0D2618',
                     'briefcase',
-                    FontAwesome5
+                    FontAwesome5,
+                    '/projects'
                 )}
                 {renderTile(
                     'Tasks',
@@ -91,7 +122,8 @@ export default function HomePage() {
                     '#EBF2EB',
                     '#D9B4A7',
                     'tasks',
-                    FontAwesome5
+                    FontAwesome5,
+                    '/Tasks'
                 )}
             </View>
 
