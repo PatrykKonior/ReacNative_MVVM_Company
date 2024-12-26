@@ -15,13 +15,14 @@ export default function HomePage() {
         "/timeLogs" |
         "/settings" |
         "/sale" |
-        "/payments";
+        "/payments" |
+        "/notifications";
 
     const router = useRouter(); // Inicjalizacja routera
 
     // Funkcja do nawigacji
-    const navigateTo = (route: RoutePaths) => {
-        router.push(route); // Przekierowanie do wybranej ścieżki
+    const navigateTo = (route: string) => {
+        router.push(route); // Bez błędu
     };
 
     const renderTile = (
@@ -47,7 +48,7 @@ export default function HomePage() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.greeting}>Hello, Patryk!</Text>
+            <Text style={styles.greeting}>Hello Patryk!</Text>
 
             {/* 1 rząd */}
             <View style={styles.row}>
@@ -58,7 +59,7 @@ export default function HomePage() {
                     '#0D2618',
                     'notifications',
                     MaterialIcons,
-                    '/invoices' // DO NAPRAWY
+                    '/notifications'
                 )}
                 {renderTile(
                     'Messages',
