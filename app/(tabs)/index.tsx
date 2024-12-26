@@ -216,18 +216,18 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     rowWide: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         justifyContent: 'space-between',
         marginBottom: 20,
     },
     wideTile: {
-        flexDirection: 'row', // Ustawiamy kafelek jako wiersz
+        flexDirection: 'row',
         alignItems: 'center',
         height: 140,
-        width: 365,
+        width: "auto",
         marginVertical: 10,
         borderRadius: 12,
-        padding: 10, // Dodanie odstępów wewnętrznych
+        padding: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -241,14 +241,14 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 40,
-        marginLeft: 10,
+        marginRight: 85,
+        marginLeft: 40,
     },
     textContainer: {
         flex: 1,
     },
     wideTileTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#FFFFFF',
         marginBottom: 5,
