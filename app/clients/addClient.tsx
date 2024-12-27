@@ -78,7 +78,7 @@ export default function AddClient() {
 
         try {
             await apiClient.post('/Clients', client); // Poprawiony endpoint
-            addNotification('add', `Added client: ${client.companyName}`, '/clients/addClient'); // Powiadomienie
+            addNotification('add', `Added Client: ${client.companyName}`, '/clients/addClient'); // Powiadomienie
             Toast.show({
                 type: 'success',
                 text1: 'Success',

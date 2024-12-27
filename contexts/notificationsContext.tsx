@@ -23,7 +23,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
             id: Date.now().toString(),
             type,
             message,
-            time: new Date().toLocaleTimeString(),
+            time: new Date().toISOString(),
             route,
         };
         setNotifications((prev) => [newNotification, ...prev]);

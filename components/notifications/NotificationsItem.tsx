@@ -2,6 +2,26 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
+const formatTime = (timestamp: string): string => {
+    const now = new Date();
+    const date = new Date(timestamp);
+
+    const diffMs = now.getTime() - date.getTime(); // Różnica w milisekundach
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+
+    if (diffMinutes < 1) return 'just now';
+    if (diffMinutes < 60) return `${diffMinutes} min. ago`;
+    if (diffHours < 3) return `${diffHours} h. ago`;
+
+    const formattedDate = date.toLocaleDateString(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+    return formattedDate;
+};
+
 interface Notification {
     id: string;
     type: 'add' | 'edit' | 'delete';
@@ -33,7 +53,7 @@ const NotificationItem: React.FC<Props> = ({ notification, onPress }) => {
             <View style={styles.iconContainer}>{getIcon()}</View>
             <View style={styles.textContainer}>
                 <Text style={styles.title}>{notification.message}</Text>
-                <Text style={styles.subtitle}>{notification.time}</Text>
+                <Text style={styles.subtitle}>{formatTime(notification.time)}</Text>
             </View>
         </TouchableOpacity>
     );

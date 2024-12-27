@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useNotifications } from '@/contexts/notificationsContext';
+import Toast from 'react-native-toast-message';
 
 type Client = {
     clientID: number;
@@ -80,13 +81,21 @@ export default function ViewAllClients() {
             addNotification('edit', `Updated client: ${editingClient.companyName}`, '/clients/viewAllClients'); // Powiadomienie
             setEditingClient(null);
             fetchClients();
-            alert('Client updated successfully!');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Client updated successfully!',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the client'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            alert(errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not update client. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -95,13 +104,21 @@ export default function ViewAllClients() {
             await apiClient.delete(`/Clients/${id}`);
             setClients((prevClients) => prevClients.filter((client) => client.clientID !== id));
             addNotification('delete', `Deleted client with ID: ${id}`, '/clients/viewAllClients'); // Powiadomienie
-            alert(`Deleted Client #${id}`);
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted client with ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the client'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            alert(errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete client. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
