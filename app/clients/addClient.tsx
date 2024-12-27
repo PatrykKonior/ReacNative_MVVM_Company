@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 // Typy dla klienta
 interface Client {
@@ -24,6 +25,9 @@ interface Errors {
 }
 
 export default function AddClient() {
+    // funkcja powiadomień
+    const { addNotification } = useNotifications();
+
     const [client, setClient] = useState<Client>({
         companyName: '',
         nip: '',
@@ -74,6 +78,7 @@ export default function AddClient() {
 
         try {
             await apiClient.post('/Clients', client); // Poprawiony endpoint
+            addNotification('add', `Added client: ${client.companyName}`, '/clients/addClient'); // Powiadomienie
             Toast.show({
                 type: 'success',
                 text1: 'Success',

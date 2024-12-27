@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, TextInput } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Client = {
     clientID: number;
@@ -34,6 +35,8 @@ export default function ViewAllClients() {
     const [loading, setLoading] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
     const [errors, setErrors] = useState<Errors>({});
+
+    const { addNotification } = useNotifications();
 
     const fetchClients = async () => {
         setLoading(true);
@@ -74,6 +77,7 @@ export default function ViewAllClients() {
 
         try {
             await apiClient.put(`/Clients/${editingClient.clientID}`, editingClient); // Poprawiony endpoint
+            addNotification('edit', `Updated client: ${editingClient.companyName}`, '/clients/viewAllClients'); // Powiadomienie
             setEditingClient(null);
             fetchClients();
             alert('Client updated successfully!');
@@ -90,6 +94,7 @@ export default function ViewAllClients() {
         try {
             await apiClient.delete(`/Clients/${id}`);
             setClients((prevClients) => prevClients.filter((client) => client.clientID !== id));
+            addNotification('delete', `Deleted client with ID: ${id}`, '/clients/viewAllClients'); // Powiadomienie
             alert(`Deleted Client #${id}`);
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)

@@ -2,29 +2,30 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import NotificationItem from '../../components/notifications/NotificationsItem';
-
-interface Notification {
-    id: string;
-    type: 'add' | 'edit' | 'delete';
-    message: string;
-}
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function NotificationsScreen() {
     const router = useRouter(); // Do obsługi powrotu
-    const [notifications, setNotifications] = useState<Notification[]>([
-        { id: '1', type: 'add', message: 'Added a new project: Project A' },
-        { id: '2', type: 'edit', message: 'Edited project: Project B' },
-        { id: '3', type: 'delete', message: 'Deleted project: Project C' },
-    ]);
+    const { notifications } = useNotifications();
+
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Notifications</Text>
-            <FlatList
-                data={notifications}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <NotificationItem notification={item} />}
-            />
+            {notifications.length > 0 ? ( // Sprawdź, czy są powiadomienia
+                <FlatList
+                    data={notifications}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <NotificationItem
+                            notification={item}
+                            onPress={() => console.log('Notification clicked')} // Placeholder na akcję
+                        />
+                    )}
+                />
+            ) : (
+                <Text style={styles.noNotifications}>No notifications</Text>
+            )}
             <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
                 <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -53,5 +54,11 @@ const styles = StyleSheet.create({
     closeButtonText: {
         color: 'white',
         fontSize: 16,
+    },
+    noNotifications: {
+        textAlign: 'center',
+        fontSize: 16,
+        color: '#888',
+        marginTop: 20,
     },
 });
