@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type TimeLog = {
     timeLogID: number;
@@ -37,6 +39,8 @@ export default function ViewAllTimeLogs() {
     const [selectedLog, setSelectedLog] = useState<TimeLog | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<TimeLog | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchTimeLogs = async () => {
         setLoading(true);
@@ -67,11 +71,30 @@ export default function ViewAllTimeLogs() {
                     log.timeLogID === formState.timeLogID ? { ...formState } : log
                 )
             );
-            Alert.alert('Success', 'Time log updated successfully!');
+
+            addNotification(
+                'edit',
+                `Updated Time Log ID: ${formState.timeLogID}`,
+                '/timelogs/viewAllTimeLogs'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Time Log updated successfully!`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
+
             setModalVisible(false);
         } catch (error) {
-            console.error('Error updating time log:', error);
-            Alert.alert('Error', 'An error occurred while updating the time log.');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update Time Log. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -79,10 +102,28 @@ export default function ViewAllTimeLogs() {
         try {
             await apiClient.delete(`/timelogs/${id}`);
             setTimeLogs((prevLogs) => prevLogs.filter((log) => log.timeLogID !== id));
-            Alert.alert('Success', `Deleted Time Log with ID: ${id}`);
+
+            addNotification(
+                'delete',
+                `Deleted Time Log ID: ${id}`,
+                '/timelogs/viewAllTimeLogs'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Time Log ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            console.error('Error deleting time log:', error);
-            Alert.alert('Error', 'An error occurred while deleting the time log.');
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to delete Time Log. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

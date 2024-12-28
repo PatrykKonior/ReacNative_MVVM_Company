@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 // Typy dla projektu
 interface Project {
@@ -50,6 +51,8 @@ export default function AddProject() {
     const [errors, setErrors] = useState<Errors>({});
     const [isEditing, setIsEditing] = useState(false);
 
+    const { addNotification } = useNotifications();
+
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
         headers: {
@@ -96,6 +99,13 @@ export default function AddProject() {
             if (isEditing && project.ProjectID) {
                 // Aktualizacja istniejącego projektu
                 await apiClient.put(`/Projects/${project.ProjectID}`, project);
+
+                addNotification(
+                    'edit',
+                    `Updated Project: ${project.ProjectName} (ID: ${project.ProjectID})`,
+                    '/projects/addProject'
+                );
+
                 Toast.show({
                     type: 'success',
                     text1: 'Success',
@@ -106,6 +116,13 @@ export default function AddProject() {
             } else {
                 // Tworzenie nowego projektu
                 await apiClient.post('/Projects', project);
+
+                addNotification(
+                    'add',
+                    `Added new project: ${project.ProjectName}`,
+                    '/projects/addProject'
+                );
+
                 Toast.show({
                     type: 'success',
                     text1: 'Success',
@@ -133,7 +150,7 @@ export default function AddProject() {
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: 'Could not save project. Try again.',
+                text2: 'Could not save Project. Try again.',
                 position: 'top',
                 visibilityTime: 4000,
             });

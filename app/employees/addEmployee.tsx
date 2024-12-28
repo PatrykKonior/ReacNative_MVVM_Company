@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 import axios from 'axios';
 
 export default function AddEmployee() {
@@ -23,6 +24,8 @@ export default function AddEmployee() {
         HireDate: '',
         Salary: '',
     });
+
+    const { addNotification } = useNotifications();
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -69,6 +72,8 @@ export default function AddEmployee() {
                 Salary: Number(employee.Salary),
             });
 
+            addNotification('add', `Added Employee: ${employee.FirstName} ${employee.LastName}`, '/employees/addEmployee');
+
             Toast.show({
                 type: 'success',
                 text1: 'Success',
@@ -90,7 +95,7 @@ export default function AddEmployee() {
                 Salary: '',
             });
         } catch (error) {
-            console.error('Error adding employee:', error);
+            console.error('Error adding Employee:', error);
 
             Toast.show({
                 type: 'error',

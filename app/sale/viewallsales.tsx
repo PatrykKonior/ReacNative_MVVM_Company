@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput } 
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Sale = {
     saleID: number;
@@ -21,6 +23,8 @@ export default function ViewAllSales() {
     const [sales, setSales] = useState<Sale[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+
+    const { addNotification } = useNotifications();
 
     // Fetch sales data from backend
     useEffect(() => {
@@ -54,15 +58,31 @@ export default function ViewAllSales() {
                         sale.saleID === selectedSale.saleID ? selectedSale : sale
                     )
                 );
-                Alert.alert('Success', 'Sale updated successfully!');
+
+                addNotification(
+                    'edit',
+                    `Updated Sale ID: ${selectedSale.saleID}`,
+                    '/sales/viewAllSales'
+                );
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: `Sale updated successfully!`,
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
+
                 setIsEditing(false);
                 setSelectedSale(null);
             } catch (error) {
-                const errorMessage = axios.isAxiosError(error)
-                    ? error.response?.data || 'An error occurred while updating the sale'
-                    : 'Unknown error occurred';
-                console.error(errorMessage);
-                Alert.alert('Error', errorMessage); // Powiadomienie o błędzie
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to update Sale. Try again.',
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
             }
         }
     };
@@ -71,13 +91,28 @@ export default function ViewAllSales() {
         try {
             await axios.delete(`http://localhost:5069/api/Sales/${saleID}`);
             setSales((prevSales) => prevSales.filter((sale) => sale.saleID !== saleID));
-            Alert.alert('Success', `Sale ID ${saleID} deleted successfully!`);
+
+            addNotification(
+                'delete',
+                `Deleted Sale ID: ${saleID}`,
+                '/sales/viewAllSales'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Sale ID: ${saleID}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the sale'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage); // Powiadomienie o błędzie
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to delete Sale. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

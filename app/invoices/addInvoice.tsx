@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function AddInvoice() {
     const [invoice, setInvoice] = useState({
@@ -19,6 +20,8 @@ export default function AddInvoice() {
         InvoiceStatus: '',
         TotalAmount: '',
     });
+
+    const { addNotification } = useNotifications();
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -63,6 +66,8 @@ export default function AddInvoice() {
                 TotalAmount: Number(invoice.TotalAmount),
             });
 
+            addNotification('add', `Added Invoice with Sale ID: ${invoice.SaleID}`, '/invoices/addInvoice');
+
             Toast.show({
                 type: 'success',
                 text1: 'Success',
@@ -82,7 +87,7 @@ export default function AddInvoice() {
                 TotalAmount: '',
             });
         } catch (error) {
-            console.error('Error adding invoice:', error);
+            console.error('Error adding Invoice:', error);
 
             Toast.show({
                 type: 'error',

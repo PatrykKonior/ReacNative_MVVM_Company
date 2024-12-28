@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function AddDepartment() {
+    const { addNotification } = useNotifications();
     const [department, setDepartment] = useState({
         DepartmentName: '',
         ManagerID: '',
@@ -45,6 +47,8 @@ export default function AddDepartment() {
                 DepartmentName: department.DepartmentName,
                 ManagerID: Number(department.ManagerID),
             });
+
+            addNotification('add', `Added Department: ${department.DepartmentName}`, '/departments/addDepartment');
 
             Toast.show({
                 type: 'success',

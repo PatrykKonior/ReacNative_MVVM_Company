@@ -11,6 +11,8 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker'; // Dodany poprawny import
 import axios from 'axios';
 import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 // Typ klienta
 type Client = {
@@ -30,6 +32,8 @@ export default function AddSale() {
     });
     const [clients, setClients] = useState<Client[]>([]); // Lista klientów zdefiniowana z typem Client
     const [showDatePicker, setShowDatePicker] = useState(false);
+
+    const { addNotification } = useNotifications();
 
     // Fetch clients for dropdown
     useEffect(() => {
@@ -53,7 +57,13 @@ export default function AddSale() {
             !sale.TotalGrossAmount ||
             !sale.SaleStatus
         ) {
-            Alert.alert('Validation Error', 'All fields are required.', [{ text: 'OK' }]);
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'All fields are required.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
             return; // Zakończ funkcję, jeśli walidacja nie powiedzie się
         }
 
@@ -67,7 +77,20 @@ export default function AddSale() {
                 SaleStatus: sale.SaleStatus,
             };
             await axios.post('http://localhost:5069/api/Sales', payload);
-            Alert.alert('Success', 'Sale added successfully!', [{ text: 'OK' }]);
+
+            addNotification(
+                'add',
+                `Added new sale for Client ID: ${payload.ClientID}`,
+                '/sales/addSale'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Sale added successfully 🚀',
+                position: 'top',
+                visibilityTime: 4000,
+            });
 
             // Resetowanie formularza
             setSale({
@@ -79,14 +102,13 @@ export default function AddSale() {
                 SaleStatus: '',
             });
         } catch (error: any) {
-            console.error('Error adding sale:', error.response?.data || error.message);
-
-            // Powiadomienie o błędzie
-            Alert.alert(
-                'Error',
-                error.response?.data || 'Failed to add sale. Please try again later.',
-                [{ text: 'OK' }]
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to add Sale. Please try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

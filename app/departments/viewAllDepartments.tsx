@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Department = {
     departmentID: number;
@@ -33,6 +35,8 @@ export default function ViewAllDepartments() {
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Department | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchDepartments = async () => {
         setLoading(true);
@@ -61,19 +65,28 @@ export default function ViewAllDepartments() {
 
         try {
             await apiClient.put(`/departments/${formState.departmentID}`, formState);
+            addNotification('edit', `Updated Department: ${formState.departmentName}`, '/departments/viewAllDepartments');
             setDepartments((prevDepartments) =>
                 prevDepartments.map((dept) =>
                     dept.departmentID === formState.departmentID ? { ...formState } : dept
                 )
             );
-            Alert.alert('Success', 'Department updated successfully!');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Updated Department: ${formState.departmentName}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the department'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not update Department. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -81,13 +94,22 @@ export default function ViewAllDepartments() {
         try {
             await apiClient.delete(`/departments/${id}`);
             setDepartments((prevDepartments) => prevDepartments.filter((dept) => dept.departmentID !== id));
-            Alert.alert('Success', `Deleted Department with ID: ${id}`);
+            addNotification('delete', `Deleted Department with ID: ${id}`, '/departments/viewAllDepartments');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Department with ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the department'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete Department. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

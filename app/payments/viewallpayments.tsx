@@ -11,6 +11,8 @@ import {
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 
 // Typ dla płatności
@@ -29,7 +31,9 @@ export default function ViewAllPayments() {
     const [isEditing, setIsEditing] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
-    // Pobierz płatności z API
+    const { addNotification } = useNotifications();
+
+    // Pobieram płatności z API
     useEffect(() => {
         fetchPayments();
     }, []);
@@ -57,6 +61,12 @@ export default function ViewAllPayments() {
                     selectedPayment
                 );
 
+                addNotification(
+                    'edit',
+                    `Updated Payment ID: ${selectedPayment.paymentID}`,
+                    '/payments/viewAllPayments'
+                );
+
                 // Aktualizacja listy płatności
                 setPayments((prevPayments) =>
                     prevPayments.map((payment) =>
@@ -66,16 +76,23 @@ export default function ViewAllPayments() {
                     )
                 );
 
-                Alert.alert('Success', 'Payment updated successfully!', [{ text: 'OK' }]); // Alert sukcesu
+                Toast.show({
+                    type: 'success',
+                    text1: 'Success',
+                    text2: `Payment Updated successfully!`,
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
                 setIsEditing(false);
                 setSelectedPayment(null);
             } catch (error) {
-                console.error('Error updating payment:', error);
-                Alert.alert(
-                    'Error',
-                    'Failed to update payment. Please try again later.',
-                    [{ text: 'OK' }]
-                );
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to update Payment. Try again.',
+                    position: 'top',
+                    visibilityTime: 4000,
+                });
             }
         }
     };
@@ -101,16 +118,28 @@ export default function ViewAllPayments() {
                             setPayments((prevPayments) =>
                                 prevPayments.filter((payment) => payment.paymentID !== paymentID)
                             );
-                            Alert.alert('Success', `Payment ID ${paymentID} deleted successfully!`, [
-                                { text: 'OK' },
-                            ]);
-                        } catch (error) {
-                            console.error('Error deleting payment:', error);
-                            Alert.alert(
-                                'Error',
-                                'Failed to delete payment. Please try again later.',
-                                [{ text: 'OK' }]
+
+                            addNotification(
+                                'delete',
+                                `Deleted Payment ID: ${paymentID}`,
+                                '/payments/viewAllPayments'
                             );
+
+                            Toast.show({
+                                type: 'success',
+                                text1: 'Success',
+                                text2: `Deleted Payment ID: ${paymentID}`,
+                                position: 'top',
+                                visibilityTime: 4000,
+                            });
+                        } catch (error) {
+                            Toast.show({
+                                type: 'error',
+                                text1: 'Error',
+                                text2: 'Failed to delete Payment. Try again.',
+                                position: 'top',
+                                visibilityTime: 4000,
+                            });
                         }
                     },
                 },

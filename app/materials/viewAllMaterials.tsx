@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Material = {
     materialID: number;
@@ -35,6 +37,8 @@ export default function ViewAllMaterials() {
     const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Material | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchMaterials = async () => {
         setLoading(true);
@@ -63,19 +67,28 @@ export default function ViewAllMaterials() {
 
         try {
             await apiClient.put(`/materials/${formState.materialID}`, formState);
+            addNotification('edit', `Updated Material: ${formState.materialName}`, '/materials/viewAllMaterials');
             setMaterials((prevMaterials) =>
                 prevMaterials.map((mat) =>
                     mat.materialID === formState.materialID ? { ...formState } : mat
                 )
             );
-            Alert.alert('Success', 'Material updated successfully!');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Updated Material: ${formState.materialName}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the material'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not update Material. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -85,13 +98,22 @@ export default function ViewAllMaterials() {
             setMaterials((prevMaterials) =>
                 prevMaterials.filter((material) => material.materialID !== id)
             );
-            Alert.alert('Success', `Deleted Material with ID: ${id}`);
+            addNotification('delete', `Deleted Material ID: ${id}`, '/materials/viewAllMaterials');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted material ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the material'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete Material. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

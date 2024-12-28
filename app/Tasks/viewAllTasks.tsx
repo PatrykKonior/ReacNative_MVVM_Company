@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Task = {
     taskID: number;
@@ -39,6 +41,8 @@ export default function ViewAllTasks() {
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Task | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchTasks = async () => {
         setLoading(true);
@@ -70,28 +74,60 @@ export default function ViewAllTasks() {
             setTasks((prevTasks) =>
                 prevTasks.map((t) => (t.taskID === formState.taskID ? { ...formState } : t))
             );
-            Alert.alert('Success', 'Task updated successfully!');
+
+            addNotification(
+                'edit',
+                `Updated Task: ${formState.taskName}`,
+                '/tasks/viewAllTasks'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Task updated successfully!`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
+
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the task'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update Task. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
+
 
     const handleDelete = async (id: number) => {
         try {
             await apiClient.delete(`/tasks/${id}`);
             setTasks((prevTasks) => prevTasks.filter((task) => task.taskID !== id));
-            Alert.alert('Success', `Deleted Task with ID: ${id}`);
+
+            addNotification(
+                'delete',
+                `Deleted Task ID: ${id}`,
+                '/tasks/viewAllTasks'
+            );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Task ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the task'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to delete Task. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

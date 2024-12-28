@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Employee = {
     employeeID: number;
@@ -38,6 +40,8 @@ export default function ViewAllEmployees() {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Employee | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchEmployees = async () => {
         setLoading(true);
@@ -66,19 +70,28 @@ export default function ViewAllEmployees() {
 
         try {
             await apiClient.put(`/employees/${formState.employeeID}`, formState);
+            addNotification('edit', `Updated Employee: ${formState.firstName} ${formState.lastName}`, '/employees/viewAllEmployees');
             setEmployees((prevEmployees) =>
                 prevEmployees.map((emp) =>
                     emp.employeeID === formState.employeeID ? { ...formState } : emp
                 )
             );
-            Alert.alert('Success', 'Employee updated successfully!');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Updated Employee: ${formState.firstName} ${formState.lastName}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the employee'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not update Employee. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -86,13 +99,22 @@ export default function ViewAllEmployees() {
         try {
             await apiClient.delete(`/employees/${id}`);
             setEmployees((prevEmployees) => prevEmployees.filter((employee) => employee.employeeID !== id));
-            Alert.alert('Success', `Deleted Employee with ID: ${id}`);
+            addNotification('delete', `Deleted Employee with ID: ${id}`, '/employees/viewAllEmployees');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Employee with ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the employee'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete Employee. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function AddMaterial() {
     const [material, setMaterial] = useState({
@@ -17,6 +18,8 @@ export default function AddMaterial() {
         UnitPrice: '',
         VATRate: '',
     });
+
+    const { addNotification } = useNotifications();
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -56,10 +59,12 @@ export default function AddMaterial() {
                 VATRate: Number(material.VATRate),
             });
 
+            addNotification('add', `Added Material: ${material.MaterialName}`, '/materials/addMaterial');
+
             Toast.show({
                 type: 'success',
-                text1: 'Sukces',
-                text2: 'Pomyślnie dodano Material 🚀',
+                text1: 'Success',
+                text2: 'Material added successfully 🚀',
                 position: 'top',
                 visibilityTime: 4000,
                 props: {
@@ -78,8 +83,8 @@ export default function AddMaterial() {
 
             Toast.show({
                 type: 'error',
-                text1: 'Błąd',
-                text2: 'Nie udało się dodać Material. Spróbuj ponownie.',
+                text1: 'Error',
+                text2: 'Could not add Material. Try again.',
                 position: 'top',
                 visibilityTime: 4000,
                 props: {

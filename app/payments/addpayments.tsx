@@ -11,7 +11,8 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { Alert } from 'react-native';
-
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 // Typ faktury
 type Invoice = {
@@ -39,6 +40,8 @@ export default function AddPayments() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [showDatePicker, setShowDatePicker] = useState(false);
 
+    const { addNotification } = useNotifications();
+
     // Pobierz faktury dla dropdown
     useEffect(() => {
         axios
@@ -63,11 +66,21 @@ export default function AddPayments() {
             };
 
             await axios.post('http://localhost:5069/api/Payments', payload);
-            Alert.alert(
-                'Success', // Nagłówek
-                'Payment added successfully!', // Treść
-                [{ text: 'OK' }] // Przyciski
+
+            addNotification(
+                'add',
+                `Added Payment: $${payment.paymentAmount} for Invoice ID: ${payment.invoiceID}`,
+                '/payments/addPayment'
             );
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Payment added for Invoice ID: ${payment.invoiceID}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
+
             setPayment({
                 invoiceID: '',
                 paymentDate: new Date(),
@@ -77,12 +90,13 @@ export default function AddPayments() {
         } catch (error: any) {
             console.error('Error adding payment:', error.response?.data || error.message);
 
-            // Powiadomienie o błędzie
-            Alert.alert(
-                'Error', // Nagłówek
-                error.response?.data || 'Failed to add payment.', // Treść błędu
-                [{ text: 'OK' }] // Przyciski
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to add Payment. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

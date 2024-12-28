@@ -12,6 +12,9 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
+
 
 type Project = {
     projectID: number;
@@ -43,6 +46,8 @@ export default function ViewAllProjects() {
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Project | null>(null);
 
+    const { addNotification } = useNotifications();
+
     const fetchProjects = async () => {
         setLoading(true);
         try {
@@ -70,19 +75,36 @@ export default function ViewAllProjects() {
 
         try {
             await apiClient.put(`/Projects/${formState.projectID}`, formState);
+
+            addNotification(
+                'edit',
+                `Updated Project: ${formState.projectName} (ID: ${formState.projectID})`,
+                '/projects/viewAllProjects'
+            );
+
             setProjects((prevProjects) =>
                 prevProjects.map((project) =>
                     project.projectID === formState.projectID ? formState : project
                 )
             );
-            alert('Project updated successfully!');
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Project updated successfully!`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
+
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the project'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            alert(errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update Project. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -90,13 +112,26 @@ export default function ViewAllProjects() {
         try {
             await apiClient.delete(`/Projects/${id}`);
             setProjects((prevProjects) => prevProjects.filter((project) => project.projectID !== id));
-            alert(`Deleted project with ID: ${id}`);
+            addNotification(
+                'delete',
+                `Deleted Project ID: ${id}`,
+                '/projects/viewAllProjects'
+            );
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Project ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the project'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            alert(errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to delete Project. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 

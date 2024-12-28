@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function AddTask() {
     const [task, setTask] = useState({
@@ -25,6 +26,8 @@ export default function AddTask() {
         EstimatedHours: '',
         TaskStatus: '',
     });
+
+    const { addNotification } = useNotifications();
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -74,10 +77,16 @@ export default function AddTask() {
                 TaskStatus: task.TaskStatus,
             });
 
+            addNotification(
+                'add',
+                `Added new Task: ${task.TaskName}`,
+                '/tasks/addTask'
+            );
+
             Toast.show({
                 type: 'success',
-                text1: 'Sukces',
-                text2: 'Pomyślnie dodano Task 🚀',
+                text1: 'Success',
+                text2: 'Task added successfully 🚀',
                 position: 'top',
                 visibilityTime: 4000,
                 props: {
@@ -100,8 +109,8 @@ export default function AddTask() {
 
             Toast.show({
                 type: 'error',
-                text1: 'Błąd',
-                text2: 'Nie udało się dodać Task. Spróbuj ponownie.',
+                text1: 'Error',
+                text2: 'Failed to add Task. Try again.',
                 position: 'top',
                 visibilityTime: 4000,
                 props: {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function AddTimeLog() {
     const [timeLog, setTimeLog] = useState({
@@ -21,6 +22,8 @@ export default function AddTimeLog() {
         HourlyRate: '',
         TotalAmount: '',
     });
+
+    const { addNotification } = useNotifications();
 
     const apiClient = axios.create({
         baseURL: 'http://localhost:5069/api',
@@ -65,10 +68,16 @@ export default function AddTimeLog() {
                 TotalAmount: Number(timeLog.TotalAmount),
             });
 
+            addNotification(
+                'add',
+                `Added new Time Log for Employee ID: ${timeLog.EmployeeID}`,
+                '/timelogs/addTimeLog'
+            );
+
             Toast.show({
                 type: 'success',
                 text1: 'Success',
-                text2: 'Successfuully added Time Log 🚀',
+                text2: 'Successfully added Time Log 🚀',
                 position: 'top',
                 visibilityTime: 4000,
                 props: {

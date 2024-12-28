@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 type Invoice = {
     invoiceID: number;
@@ -36,6 +38,8 @@ export default function ViewAllInvoices() {
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState<Invoice | null>(null);
+
+    const { addNotification } = useNotifications();
 
     const fetchInvoices = async () => {
         setLoading(true);
@@ -64,19 +68,28 @@ export default function ViewAllInvoices() {
 
         try {
             await apiClient.put(`/invoices/${formState.invoiceID}`, formState);
+            addNotification('edit', `Updated Invoice ID: ${formState.invoiceID}`, '/invoices/viewAllInvoices');
             setInvoices((prevInvoices) =>
                 prevInvoices.map((inv) =>
                     inv.invoiceID === formState.invoiceID ? { ...formState } : inv
                 )
             );
-            Alert.alert('Success', 'Invoice updated successfully!');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Updated Invoice ID: ${formState.invoiceID}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
             setModalVisible(false);
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while updating the invoice'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not update Invoice. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
@@ -84,13 +97,22 @@ export default function ViewAllInvoices() {
         try {
             await apiClient.delete(`/invoices/${id}`);
             setInvoices((prevInvoices) => prevInvoices.filter((invoice) => invoice.invoiceID !== id));
-            Alert.alert('Success', `Deleted Invoice with ID: ${id}`);
+            addNotification('delete', `Deleted Invoice ID: ${id}`, '/invoices/viewAllInvoices');
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: `Deleted Invoice ID: ${id}`,
+                position: 'top',
+                visibilityTime: 4000,
+            });
         } catch (error) {
-            const errorMessage = axios.isAxiosError(error)
-                ? error.response?.data || 'An error occurred while deleting the invoice'
-                : 'Unknown error occurred';
-            console.error(errorMessage);
-            Alert.alert('Error', errorMessage);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete Invoice. Try again.',
+                position: 'top',
+                visibilityTime: 4000,
+            });
         }
     };
 
