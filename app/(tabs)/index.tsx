@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function HomePage() {
     type RoutePaths =
@@ -20,6 +21,8 @@ export default function HomePage() {
 
     const router = useRouter(); // Inicjalizacja routera
 
+    const { notifications } = useNotifications(); // LISTA POWIADOMIEŃ
+
     // Funkcja do nawigacji
     const navigateTo = (route: string) => {
         router.push(route); // Bez błędu
@@ -32,7 +35,8 @@ export default function HomePage() {
         circleColor: string,
         iconName: string,
         IconComponent: any,
-        route: RoutePaths
+        route: RoutePaths,
+        badgeCount?: number
     ) => (
         <TouchableOpacity
             style={[styles.tile, { backgroundColor }]}
@@ -40,6 +44,11 @@ export default function HomePage() {
         >
             <View style={[styles.circle, { backgroundColor: circleColor }]}>
                 <IconComponent name={iconName} size={24} color="#FFFFFF" />
+                {badgeCount !== undefined && badgeCount > 0 && (
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{badgeCount}</Text>
+                    </View>
+                )}
             </View>
             <Text style={styles.tileTitle}>{title}</Text>
             <Text style={styles.tileSubtitle}>{subtitle}</Text>
@@ -59,7 +68,8 @@ export default function HomePage() {
                     '#0D2618',
                     'notifications',
                     MaterialIcons,
-                    '/notifications'
+                    '/notifications',
+                    notifications.length
                 )}
                 {renderTile(
                     'Messages',
@@ -68,7 +78,8 @@ export default function HomePage() {
                     '#465954',
                     'message',
                     MaterialIcons,
-                    '/invoices' // DO NAPRAWY
+                    '/invoices', // DO NAPRAWY
+                    0
                 )}
                 {renderTile(
                     'Announcements',
@@ -77,7 +88,8 @@ export default function HomePage() {
                     '#BBBFB4',
                     'announcement',
                     MaterialIcons,
-                    '/invoices' // DO NAPRAWY
+                    '/invoices', // DO NAPRAWY
+                    1,
                 )}
             </View>
 
@@ -186,6 +198,24 @@ export default function HomePage() {
 }
 
 const styles = StyleSheet.create({
+    badge: {
+        position: 'absolute',
+        right: -8,
+        top: -8,
+        backgroundColor: '#8C0E03',
+        borderRadius: 12,
+        width: 24,
+        height: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFFFFF', // Obramowanie
+    },
+    badgeText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
     container: {
         flexGrow: 1,
         padding: 16,
