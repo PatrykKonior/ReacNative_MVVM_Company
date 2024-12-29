@@ -18,7 +18,8 @@ export default function HomePage() {
         "/sale" |
         "/payments" |
         "/notifications" |
-        "/messages";
+        "/messages" |
+    "/announcements";
 
     const router = useRouter(); // Inicjalizacja routera
 
@@ -89,7 +90,7 @@ export default function HomePage() {
                     '#BBBFB4',
                     'announcement',
                     MaterialIcons,
-                    '/invoices', // DO NAPRAWY
+                    '/announcements',
                     1,
                 )}
             </View>
