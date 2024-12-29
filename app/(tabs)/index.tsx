@@ -17,15 +17,16 @@ export default function HomePage() {
         "/settings" |
         "/sale" |
         "/payments" |
-        "/notifications";
+        "/notifications" |
+        "/messages";
 
     const router = useRouter(); // Inicjalizacja routera
 
     const { notifications } = useNotifications(); // LISTA POWIADOMIEŃ
 
     // Funkcja do nawigacji
-    const navigateTo = (route: string) => {
-        router.push(route); // Bez błędu
+    const navigateTo = (route: RoutePaths) => {
+        router.push(route as never);
     };
 
     const renderTile = (
@@ -78,7 +79,7 @@ export default function HomePage() {
                     '#465954',
                     'message',
                     MaterialIcons,
-                    '/invoices', // DO NAPRAWY
+                    '/messages',
                     0
                 )}
                 {renderTile(
