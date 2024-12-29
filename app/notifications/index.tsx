@@ -6,26 +6,28 @@ import { useNotifications } from '@/contexts/notificationsContext';
 
 export default function NotificationsScreen() {
     const router = useRouter(); // Do obsługi powrotu
-    const { notifications } = useNotifications();
+    const { notifications, clearAllNotifications } = useNotifications();
 
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Notifications</Text>
-            {notifications.length > 0 ? ( // Sprawdź, czy są powiadomienia
+            {notifications.length > 0 ? (
                 <FlatList
                     data={notifications}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <NotificationItem
                             notification={item}
-                            onPress={() => console.log('Notification clicked')} // Placeholder na akcję
                         />
                     )}
                 />
             ) : (
                 <Text style={styles.noNotifications}>No notifications</Text>
             )}
+            <TouchableOpacity style={styles.clearAllButton} onPress={clearAllNotifications}>
+                <Text style={styles.clearAllButtonText}>Clear All</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
                 <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
@@ -43,6 +45,17 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 10,
+    },
+    clearAllButton: {
+        marginTop: 20,
+        backgroundColor: '#8C0E03',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    clearAllButtonText: {
+        color: 'white',
+        fontSize: 16,
     },
     closeButton: {
         marginTop: 20,

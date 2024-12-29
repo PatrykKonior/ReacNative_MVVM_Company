@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useNotifications } from '@/contexts/notificationsContext';
 
 const formatTime = (timestamp: string): string => {
     const now = new Date();
@@ -31,10 +32,11 @@ interface Notification {
 
 interface Props {
     notification: Notification;
-    onPress: () => void;
 }
 
-const NotificationItem: React.FC<Props> = ({ notification, onPress }) => {
+const NotificationItem: React.FC<Props> = ({ notification }) => {
+    const { removeNotification } = useNotifications();
+
     const getIcon = () => {
         switch (notification.type) {
             case 'add':
@@ -49,13 +51,16 @@ const NotificationItem: React.FC<Props> = ({ notification, onPress }) => {
     };
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onPress}>
+        <View style={styles.container}>
             <View style={styles.iconContainer}>{getIcon()}</View>
             <View style={styles.textContainer}>
                 <Text style={styles.title}>{notification.message}</Text>
                 <Text style={styles.subtitle}>{formatTime(notification.time)}</Text>
             </View>
-        </TouchableOpacity>
+            <TouchableOpacity onPress={() => removeNotification(notification.id)}>
+                <Text style={styles.clearText}>Clear</Text>
+            </TouchableOpacity>
+        </View>
     );
 };
 
@@ -90,6 +95,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         right: 5,
+    },
+    clearText: {
+        color: '#8C0E03',
+        fontWeight: 'bold',
+        marginRight: 10,
+        top: -2,
+        right: -12,
     },
 });
 

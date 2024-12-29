@@ -11,6 +11,8 @@ interface Notification {
 interface NotificationsContextType {
     notifications: Notification[];
     addNotification: (type: 'add' | 'edit' | 'delete', message: string, route: string) => void;
+    removeNotification: (id: string) => void;
+    clearAllNotifications: () => void;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -29,8 +31,16 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         setNotifications((prev) => [newNotification, ...prev]);
     };
 
+    const removeNotification = (id: string) => {
+        setNotifications((prev) => prev.filter((notification) => notification.id !== id));
+    };
+
+    const clearAllNotifications = () => {
+        setNotifications([]); // Usuwam wszystkie powiadomienia
+    };
+
     return (
-        <NotificationsContext.Provider value={{ notifications, addNotification }}>
+        <NotificationsContext.Provider value={{ notifications, addNotification, removeNotification, clearAllNotifications }}>
             {children}
         </NotificationsContext.Provider>
     );
