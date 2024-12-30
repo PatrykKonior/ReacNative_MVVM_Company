@@ -9,15 +9,54 @@ import {
     Animated,
     Easing,
     Dimensions,
+    ScrollView,
 } from 'react-native';
 
+import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Typy ścieżek
+type RoutePaths =
+    "/clients" |
+    "/projects" |
+    "/employees" |
+    "/departments" |
+    "/invoices" |
+    "/materials" |
+    "/Tasks" |
+    "/timeLogs" |
+    "/settings" |
+    "/sale" |
+    "/payments";
+
+// Definicja kategorii
+const categories: Array<{
+    id: string;
+    title: string;
+    icon: string;
+    iconFamily: any;
+    route: RoutePaths;
+}> = [
+    { id: '1', title: 'Clients', icon: 'users', iconFamily: FontAwesome5, route: '/clients' },
+    { id: '2', title: 'Projects', icon: 'briefcase', iconFamily: FontAwesome5, route: '/projects' },
+    { id: '3', title: 'Sales', icon: 'chart-line', iconFamily: FontAwesome5, route: '/sale' },
+    { id: '4', title: 'Payments', icon: 'money-check-alt', iconFamily: FontAwesome5, route: '/payments' },
+    { id: '5', title: 'Employees', icon: 'people', iconFamily: MaterialIcons, route: '/employees' },
+    { id: '6', title: 'Departments', icon: 'building', iconFamily: FontAwesome5, route: '/departments' },
+    { id: '7', title: 'Invoices', icon: 'file-invoice-dollar', iconFamily: FontAwesome5, route: '/invoices' },
+    { id: '8', title: 'Materials', icon: 'boxes', iconFamily: FontAwesome5, route: '/materials' },
+    { id: '9', title: 'Tasks', icon: 'tasks', iconFamily: FontAwesome5, route: '/Tasks' },
+    { id: '10', title: 'Time Logs', icon: 'clock', iconFamily: FontAwesome5, route: '/timeLogs' },
+    { id: '11', title: 'Settings', icon: 'cogs', iconFamily: FontAwesome5, route: '/settings' },
+];
+
 export default function TabLayout() {
     const [isMenuVisible, setMenuVisible] = useState(false);
     const menuHeight = useRef(new Animated.Value(0)).current; // Startowa wysokość menu
+    const router = useRouter();
 
     const toggleMenu = () => {
         if (isMenuVisible) {
@@ -32,12 +71,17 @@ export default function TabLayout() {
             // Rozwijanie menu
             setMenuVisible(true);
             Animated.timing(menuHeight, {
-                toValue: SCREEN_HEIGHT - 115, // Zatrzymaj animację tuż nad zakładkami
+                toValue: SCREEN_HEIGHT - 115, // animacja tuż nad zakładkami
                 duration: 300,
                 easing: Easing.inOut(Easing.ease),
                 useNativeDriver: false,
             }).start();
         }
+    };
+
+    const navigateTo = (route: RoutePaths) => {
+        toggleMenu(); // Zamykam menu przed przejściem
+        router.push(route); // Przechodze do wybranej ścieżki
     };
 
     return (
@@ -50,38 +94,20 @@ export default function TabLayout() {
                 ]}
             >
                 {isMenuVisible && (
-                    <View style={styles.menuContent}>
-                        <TouchableOpacity
-                            style={styles.menuButton}
-                            onPress={() => alert('Go to Clients')}
-                        >
-                            <Text style={styles.menuButtonText}>Clients</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.menuButton}
-                            onPress={() => alert('Go to Invoices')}
-                        >
-                            <Text style={styles.menuButtonText}>Invoices</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.menuButton}
-                            onPress={() => alert('Go to Departments')}
-                        >
-                            <Text style={styles.menuButtonText}>Departments</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.menuButton}
-                            onPress={() => alert('Go to Employees')}
-                        >
-                            <Text style={styles.menuButtonText}>Employees</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.menuButton}
-                            onPress={() => alert('Go to Projects')}
-                        >
-                            <Text style={styles.menuButtonText}>Projects</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <ScrollView contentContainerStyle={styles.scrollContent}>
+                        {categories.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                style={styles.menuButton}
+                                onPress={() => navigateTo(item.route)}
+                            >
+                                <View style={styles.menuIconContainer}>
+                                    <item.iconFamily name={item.icon} size={24} color="#FFFFFF" />
+                                </View>
+                                <Text style={styles.menuButtonText}>{item.title}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 )}
             </Animated.View>
 
@@ -152,7 +178,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 63, // lokalizacja menu - od góry
         left: 0,
-        width: SCREEN_WIDTH * 0.2, // Menu na 15% szerokości ekranu
+        width: SCREEN_WIDTH * 0.3, // Menu na 15% szerokości ekranu
         backgroundColor: '#e0e0e0',
         overflow: 'hidden',
         borderTopRightRadius: 8,
@@ -164,18 +190,29 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         zIndex: 1,
     },
+    scrollContent: {
+        padding: 10,
+    },
     menuContent: {
         flex: 1,
         padding: 10,
     },
     menuButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#465954',
         paddingVertical: 10,
         borderRadius: 8,
         marginVertical: 5,
+        paddingHorizontal: 10,
+    },
+    menuIconContainer: {
+        width: 30,
         alignItems: 'center',
+        marginRight: 10,
     },
     menuButtonText: {
+        flex: 1,
         color: '#fff',
         fontSize: 16,
         fontWeight: '500',
