@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotifications } from '@/contexts/notificationsContext';
+import axios from 'axios';
 
 export default function HomePage() {
     type RoutePaths =
@@ -24,11 +25,97 @@ export default function HomePage() {
     const router = useRouter(); // Inicjalizacja routera
 
     const { notifications } = useNotifications(); // LISTA POWIADOMIEŃ
+    const [activeProjectsCount, setActiveProjectsCount] = useState<number>(0);
+    const [employeesCount, setEmployeesCount] = useState<number>(0);
+    const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState<number>(0);
+    const [upcomingDeadlinesCount, setUpcomingDeadlinesCount] = useState<number>(0);
 
     // Funkcja do nawigacji
     const navigateTo = (route: RoutePaths) => {
         router.push(route as never);
     };
+
+    // Pobranie liczby aktywnych projektów
+    const fetchActiveProjects = async () => {
+        try {
+            const response = await axios.get('http://localhost:5069/api/Projects');
+            const projects = response.data;
+
+            // Filtrujemy projekty, które NIE są zakończone
+            const activeProjects = projects.filter(
+                (project: { projectStatus: string }) =>
+                    project.projectStatus !== 'Zakończony' &&
+                    project.projectStatus !== 'zakończony' &&
+                    project.projectStatus !== 'Zakonczony' &&
+                    project.projectStatus !== 'zakonczony'
+            );
+
+            setActiveProjectsCount(activeProjects.length);
+        } catch (error) {
+            console.error('Error fetching active projects:', error);
+        }
+    };
+
+    // Pobranie liczby pracowników
+    const fetchEmployees = async () => {
+        try {
+            const response = await axios.get('http://localhost:5069/api/Employees');
+            setEmployeesCount(response.data.length); // Liczba pracowników
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+        }
+    };
+
+    // Liczba nieopłaconych faktur
+    const fetchUnpaidInvoices = async () => {
+        try {
+            const response = await axios.get('http://localhost:5069/api/Invoices');
+            const invoices = response.data;
+
+            const unpaidInvoices = invoices.filter(
+                (invoice: { invoiceStatus: string }) =>
+                    invoice.invoiceStatus.toLowerCase() !== 'opłacona' // Sprawdzamy status
+            );
+
+            setUnpaidInvoicesCount(unpaidInvoices.length); // Ustawiamy stan
+        } catch (error) {
+            console.error('Error fetching invoices:', error);
+        }
+    };
+
+    // Pobranie zadań z nadchodzącymi terminami
+    const fetchUpcomingDeadlines = async () => {
+        try {
+            const response = await axios.get('http://localhost:5069/api/tasks');
+            const tasks = response.data;
+
+            // Aktualna data
+            const today = new Date();
+
+            const upcomingDeadlines = tasks.filter((task: { taskStatus: string; taskEndDate?: string }) => {
+                const taskEndDate = task.taskEndDate ? new Date(task.taskEndDate) : null;
+
+                return (
+                    // Zadania tylko w trakcie
+                    task.taskStatus === 'W trakcie' &&
+                    // Termin jeszcze nie minął LUB jest przeterminowane, ale nadal w toku
+                    (taskEndDate && (taskEndDate >= today || taskEndDate < today))
+                );
+            });
+
+            setUpcomingDeadlinesCount(upcomingDeadlines.length);
+        } catch (error) {
+            console.error('Error fetching upcoming deadlines:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchActiveProjects();
+        fetchEmployees();
+        fetchUnpaidInvoices();
+        fetchUpcomingDeadlines();
+    }, []);
+
 
     const renderTile = (
         title: string,
@@ -154,7 +241,7 @@ export default function HomePage() {
                     </View>
                     <View style={styles.textContainer}>
                         <Text style={styles.wideTileTitle}>Active Projects</Text>
-                        <Text style={styles.wideTileSubtitle}>Count: 23</Text>
+                        <Text style={styles.wideTileSubtitle}>Count: {activeProjectsCount}</Text>
                     </View>
                 </View>
 
@@ -164,7 +251,7 @@ export default function HomePage() {
                     </View>
                     <View style={styles.textContainer}>
                         <Text style={styles.wideTileTitle}>Number of Employees</Text>
-                        <Text style={styles.wideTileSubtitle}>Count: 10</Text>
+                        <Text style={styles.wideTileSubtitle}>Count: {employeesCount}</Text>
                     </View>
                 </View>
             </View>
@@ -181,7 +268,7 @@ export default function HomePage() {
                     </View>
                     <View style={styles.textContainer}>
                         <Text style={styles.wideTileTitle}>Unpaid Invoices</Text>
-                        <Text style={styles.wideTileSubtitle}>Count: 15</Text>
+                        <Text style={styles.wideTileSubtitle}>Count: {unpaidInvoicesCount}</Text>
                     </View>
                 </View>
 
@@ -191,7 +278,7 @@ export default function HomePage() {
                     </View>
                     <View style={styles.textContainer}>
                         <Text style={styles.wideTileTitle}>Upcoming Deadlines</Text>
-                        <Text style={styles.wideTileSubtitle}>Count: 5</Text>
+                        <Text style={styles.wideTileSubtitle}>Count: {upcomingDeadlinesCount}</Text>
                     </View>
                 </View>
             </View>
