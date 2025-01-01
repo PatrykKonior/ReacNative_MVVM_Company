@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const advancedFunctions = [
     {
@@ -9,6 +10,7 @@ const advancedFunctions = [
         description: 'Track project deadlines and get timely reminders.',
         renderIcon: () => <FontAwesome5 name="calendar-alt" size={24} color="#FFFFFF" />,
         backgroundColor: '#465954',
+        route: '/advanced/deadlineMonitoring',
     },
     {
         id: '2',
@@ -26,19 +28,25 @@ const advancedFunctions = [
     },
 ];
 
-export default function ToolsScreen() {
+export default function AdvancedScreen() {
+    const router = useRouter();
+
     const renderCard = ({
                             title,
                             description,
                             renderIcon,
                             backgroundColor,
+                            route,
                         }: {
         title: string;
         description: string;
         renderIcon: () => JSX.Element;
         backgroundColor: string;
+        route?: string;
     }) => (
-        <TouchableOpacity style={[styles.card, { backgroundColor }]} key={title}>
+        <TouchableOpacity style={[styles.card, { backgroundColor }]} key={title} onPress={() => {
+            if (route) router.push(route as never);
+        }}>
             <View style={styles.iconContainer}>{renderIcon()}</View>
             <View style={styles.textContainer}>
                 <Text style={styles.cardTitle}>{title}</Text>
@@ -57,6 +65,7 @@ export default function ToolsScreen() {
                         description: item.description,
                         renderIcon: item.renderIcon,
                         backgroundColor: item.backgroundColor,
+                        route: item.route,
                     })
                 )}
             </View>
