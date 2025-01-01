@@ -7,6 +7,8 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 // Przykładowe dane
 const initialData = [
@@ -47,6 +49,34 @@ const getIcon = (type: string, isOverdue: boolean) => {
         return <FontAwesome5 name="file-invoice-dollar" size={24} color={iconColor} />;
     }
     return <MaterialIcons name="assignment" size={24} color={iconColor} />;
+};
+
+// Funkcja eksportu do CSV
+const exportToCSV = async (data: any[]) => {
+    try {
+        // Nagłówki CSV
+        const headers = 'ID,Title,Date,Status,Type\n';
+
+        // Przekształcenie danych
+        const rows = data.map(item =>
+            `${item.id},"${item.title}",${item.date},${item.isOverdue ? 'Overdue' : 'On Time'},${item.type}`
+        );
+
+        const csvContent = headers + rows.join('\n');
+
+        // Tworzenie pliku
+        const fileUri = FileSystem.documentDirectory + 'deadline_report.csv';
+        await FileSystem.writeAsStringAsync(fileUri, csvContent);
+
+        // Udostępnienie pliku
+        await Sharing.shareAsync(fileUri, {
+            mimeType: 'text/csv',
+            dialogTitle: 'Export Report',
+            UTI: 'public.comma-separated-values-text',
+        });
+    } catch (error) {
+        console.error('Export Error:', error);
+    }
 };
 
 export default function DeadlineMonitoring() {
@@ -98,6 +128,11 @@ export default function DeadlineMonitoring() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Deadline Monitoring</Text>
+
+            <TouchableOpacity style={styles.exportButton} onPress={() => exportToCSV(data)}>
+                <Text style={styles.exportButtonText}>Export to CSV</Text>
+            </TouchableOpacity>
+
             <FlatList
                 data={data}
                 renderItem={renderItem}
@@ -175,5 +210,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         color: '#BB4444', // Tekst "Overdue"
+    },
+    exportButton: {
+        padding: 10,
+        backgroundColor: '#88A29B',
+        borderRadius: 8,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    exportButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
