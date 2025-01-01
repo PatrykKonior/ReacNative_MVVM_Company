@@ -5,7 +5,8 @@ export default function AdvancedIndex() {
     const router = useRouter();
 
     useEffect(() => {
-        router.replace('/advanced/deadlineMonitoring');
+        // Przekierowanie bez nadpisywania historii (ważne dla powrotu)
+        router.push('/advanced/deadlineMonitoring' as const);
     }, []);
 
     return null;

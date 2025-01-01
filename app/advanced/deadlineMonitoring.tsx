@@ -1,12 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
     TouchableOpacity,
-    Animated,
-    Easing,
 } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
@@ -43,18 +41,16 @@ const initialData = [
 ];
 
 // Funkcja do pobrania odpowiedniej ikony
-const getIcon = (type: string) => {
+const getIcon = (type: string, isOverdue: boolean) => {
+    const iconColor = isOverdue ? '#FAD2D2' : '#FFFFFF';
     if (type === 'invoice') {
-        return <FontAwesome5 name="file-invoice-dollar" size={24} color="#FFFFFF" />;
+        return <FontAwesome5 name="file-invoice-dollar" size={24} color={iconColor} />;
     }
-    return <MaterialIcons name="assignment" size={24} color="#FFFFFF" />;
+    return <MaterialIcons name="assignment" size={24} color={iconColor} />;
 };
 
 export default function DeadlineMonitoring() {
     const [data, setData] = useState(initialData);
-
-    // Animowane wartości dla obramowania
-    const animatedBorder = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         // Sortowanie danych
@@ -64,56 +60,40 @@ export default function DeadlineMonitoring() {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
         });
         setData(sortedData);
-
-        // Animacja dla opóźnionych kart
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(animatedBorder, {
-                    toValue: 1,
-                    duration: 1500,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: false,
-                }),
-                Animated.timing(animatedBorder, {
-                    toValue: 0,
-                    duration: 1500,
-                    easing: Easing.inOut(Easing.ease),
-                    useNativeDriver: false,
-                }),
-            ])
-        ).start();
     }, []);
 
-    const renderItem = ({ item }: { item: any }) => {
-        // Efekt przesuwającego się koloru obramowania
-        const borderColor = item.isOverdue
-            ? animatedBorder.interpolate({
-                inputRange: [0, 0.5, 1],
-                outputRange: ['#8C0E03', '#FF6347', '#8C0E03'],
-            })
-            : '#EBF2EB';
-
-        return (
-            <TouchableOpacity>
-                <Animated.View style={[
-                    styles.card,
-                    item.isOverdue && {
-                        borderColor: borderColor,
-                        borderWidth: 3, // Grubsze obramowanie
-                    },
+    const renderItem = ({ item }: { item: any }) => (
+        <TouchableOpacity>
+            <View style={[
+                styles.card,
+                item.isOverdue && styles.overdueContainer // Styl dla opóźnionych
+            ]}>
+                <View style={[
+                    styles.iconContainer,
+                    item.isOverdue && styles.overdueIconContainer // Czerwone tło ikony
                 ]}>
-                    <View style={styles.iconContainer}>{getIcon(item.type)}</View>
-                    <View style={styles.textContainer}>
-                        <Text style={styles.cardTitle}>{item.title}</Text>
-                        <Text style={styles.cardSubtitle}>{item.date}</Text>
-                        {item.isOverdue && (
-                            <Text style={styles.overdueText}>Overdue</Text>
-                        )}
-                    </View>
-                </Animated.View>
-            </TouchableOpacity>
-        );
-    };
+                    {getIcon(item.type, item.isOverdue)}
+                </View>
+                <View style={styles.textContainer}>
+                    <Text style={[
+                        styles.cardTitle,
+                        item.isOverdue && styles.overdueText // Czerwony tekst dla opóźnionych
+                    ]}>
+                        {item.title}
+                    </Text>
+                    <Text style={[
+                        styles.cardSubtitle,
+                        item.isOverdue && styles.overdueText // Czerwony tekst dla daty
+                    ]}>
+                        {item.date}
+                    </Text>
+                    {item.isOverdue && (
+                        <Text style={styles.overdueLabel}>Overdue</Text> // Etykieta "Overdue"
+                    )}
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
 
     return (
         <View style={styles.container}>
@@ -157,6 +137,11 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
+    overdueContainer: {
+        backgroundColor: '#FAD2D2', // Jasny czerwony kolor tła
+        borderColor: '#BB4444', // Delikatne bordowe obramowanie
+        borderWidth: 2, // Grubsze obramowanie
+    },
     iconContainer: {
         width: 50,
         height: 50,
@@ -165,6 +150,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#465954',
         marginRight: 15,
+    },
+    overdueIconContainer: {
+        backgroundColor: '#BB4444', // Czerwone tło ikony dla opóźnionych
     },
     textContainer: {
         flex: 1,
@@ -179,9 +167,13 @@ const styles = StyleSheet.create({
         color: '#465954',
     },
     overdueText: {
-        fontSize: 14,
-        color: '#8C0E03',
+        color: '#BB4444', // Kolor czerwony dla tekstu
         fontWeight: 'bold',
+    },
+    overdueLabel: {
         marginTop: 5,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#BB4444', // Tekst "Overdue"
     },
 });
