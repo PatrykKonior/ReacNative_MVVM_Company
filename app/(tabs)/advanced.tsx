@@ -7,7 +7,7 @@ const advancedFunctions = [
     {
         id: '1',
         title: 'Deadline Monitoring',
-        description: 'Track project deadlines and get timely reminders.',
+        description: 'Track project and tasks deadlines.',
         renderIcon: () => <FontAwesome5 name="calendar-alt" size={24} color="#FFFFFF" />,
         backgroundColor: '#465954',
         route: '/advanced/deadlineMonitoring',
@@ -18,6 +18,7 @@ const advancedFunctions = [
         description: 'View budgets, invoices, and outstanding payments.',
         renderIcon: () => <FontAwesome5 name="wallet" size={24} color="#FFFFFF" />,
         backgroundColor: '#034C8C',
+        route: '/advancedFinancial/financialOverview',
     },
     {
         id: '3',
