@@ -6,33 +6,18 @@ import {
     TouchableOpacity,
     ScrollView,
 } from 'react-native';
-import { Pie } from 'react-chartjs-2';
 import RNPickerSelect from 'react-native-picker-select';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement } from 'chart.js';
 import { FontAwesome5 } from '@expo/vector-icons';
+import ProjectsCharts from "@/components/financial/Charts/ProjectsChart";
 
 // Rejestracja komponentów Chart.js
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
 
 export default function FinancialOverview() {
-    const [selectedCategory, setSelectedCategory] = useState('Projects');
-    const [selectedMonth, setSelectedMonth] = useState('1');
-    const [selectedYear, setSelectedYear] = useState('2024');
-
-    // Dane do wykresu
-    const chartData = {
-        labels: ['Materials', 'Salaries', 'Utilities', 'Misc'],
-        datasets: [
-            {
-                data: [5000, 7000, 2000, 1500],
-                backgroundColor: ['#034C8C', '#356fa3', '#6793ba', '#012646'],
-                borderColor: '#FFFFFF',
-                borderWidth: 1,
-            },
-        ],
-    };
-
-    const totalAmount = chartData.datasets[0].data.reduce((sum, item) => sum + item, 0);
+    const [selectedCategory, setSelectedCategory] = useState('Projects'); // Domyślna kategoria
+    const [selectedMonth, setSelectedMonth] = useState('1'); // Domyślny miesiąc
+    const [selectedYear, setSelectedYear] = useState('2024'); // Domyślny rok
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -47,7 +32,7 @@ export default function FinancialOverview() {
                             styles.tile,
                             { backgroundColor: selectedCategory === category ? '#034C8C' : '#356fa3' },
                         ]}
-                        onPress={() => setSelectedCategory(category)}
+                        onPress={() => setSelectedCategory(category)} // Ustawienie wybranej kategorii
                     >
                         <Text style={styles.tileText}>{category}</Text>
                     </TouchableOpacity>
@@ -58,7 +43,7 @@ export default function FinancialOverview() {
             <View style={styles.categoryContainer}>
                 <View style={styles.pickerContainer}>
                     <RNPickerSelect
-                        onValueChange={(value) => setSelectedMonth(value)}
+                        onValueChange={(value) => setSelectedMonth(value)} // Zmiana miesiąca
                         items={[...Array(12).keys()].map((i) => ({
                             label: `Month ${i + 1}`,
                             value: `${i + 1}`,
@@ -69,7 +54,7 @@ export default function FinancialOverview() {
                 </View>
                 <View style={styles.pickerContainer}>
                     <RNPickerSelect
-                        onValueChange={(value) => setSelectedYear(value)}
+                        onValueChange={(value) => setSelectedYear(value)} // Zmiana roku
                         items={[2022, 2023, 2024, 2025].map((year) => ({
                             label: `${year}`,
                             value: `${year}`,
@@ -80,62 +65,42 @@ export default function FinancialOverview() {
                 </View>
             </View>
 
-            {/* Wykres i legenda */}
-            <View style={[styles.chartContainer, { width: 400, height: 400, alignSelf: 'center' }]}>
-                <Pie
-                    data={chartData}
-                    options={{
-                        plugins: {
-                            legend: {
-                                position: 'bottom', // Przeniesiona legenda pod wykres
-                                labels: {
-                                    color: '#034C8C', // Białe litery
-                                    boxWidth: 15, // Rozmiar ikon
-                                    padding: 15,
-                                    usePointStyle: true, // Okrągłe ikony zamiast kwadratów
-                                    font: {
-                                        size: 14, // Powiększenie czcionki
-                                        weight: 'bold', // Pogrubienie
-                                    },
-                                },
-                            },
-                        },
-                        layout: {
-                            padding: {
-                                top: 10,
-                                bottom: 10,
-                            },
-                        },
-                    }}
-                />
-            </View>
+            {/* Wykresy dla Projects */}
+            {selectedCategory === 'Projects' && (
+                <ProjectsCharts month={selectedMonth} year={selectedYear} />
+            )}
+
 
             {/* Podsumowanie */}
             <View style={styles.overviewContainer}>
                 <Text style={styles.overviewTitle}>Overview</Text>
                 <View style={styles.overviewContent}>
                     <View style={styles.overviewColumn}>
-                        {chartData.labels.slice(0, 2).map((label, index) => (
-                            <View key={label} style={styles.detailsRow}>
-                                <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                                <Text style={styles.detailsRowText}>
-                                    {label}: <Text style={styles.amountText}>${chartData.datasets[0].data[index].toFixed(2)}</Text>
-                                </Text>
-                            </View>
-                        ))}
+                        <View style={styles.detailsRow}>
+                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.detailsRowText}>Materials:</Text>
+                            <Text style={styles.amountText}>$5000</Text>
+                        </View>
+                        <View style={styles.detailsRow}>
+                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.detailsRowText}>Salaries:</Text>
+                            <Text style={styles.amountText}>$7000</Text>
+                        </View>
                     </View>
                     <View style={styles.overviewColumn}>
-                        {chartData.labels.slice(2).map((label, index) => (
-                            <View key={label} style={styles.detailsRow}>
-                                <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                                <Text style={styles.detailsRowText}>
-                                    {label}: <Text style={styles.amountText}>${chartData.datasets[0].data[index].toFixed(2)}</Text>
-                                </Text>
-                            </View>
-                        ))}
+                        <View style={styles.detailsRow}>
+                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.detailsRowText}>Utilities:</Text>
+                            <Text style={styles.amountText}>$2000</Text>
+                        </View>
+                        <View style={styles.detailsRow}>
+                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
+                            <Text style={styles.detailsRowText}>Misc:</Text>
+                            <Text style={styles.amountText}>$1500</Text>
+                        </View>
                     </View>
                 </View>
-                <Text style={styles.totalText}>Total: ${totalAmount.toFixed(2)}</Text>
+                <Text style={styles.totalText}>Total: $15500</Text>
             </View>
         </ScrollView>
     );
