@@ -10,6 +10,21 @@ export interface ProjectData {
     projectEndDate: string;
 }
 
+// Interfejs dla danych sprzedaży
+export interface SalesData {
+    saleID: number;
+    saleDate: string;
+    totalNetAmount: number;
+    totalVATAmount: number | null;
+    totalGrossAmount: number | null;
+    saleStatus: string;
+    clientName: string;
+    clientNIP: string;
+    clientRegon: string;
+}
+
+// PROJEKTY
+
 // Funkcja pobierająca dane z API i filtrująca według miesiąca i roku
 export const fetchProjectsData = async (month: string, year: string): Promise<ProjectData[]> => {
     try {
@@ -99,5 +114,79 @@ export const processBarChartData = (projects: ProjectData[]) => {
             },
         ],
         tooltipData: { Active: activeProjects, Completed: completedProjects },
+    };
+};
+
+// SALES
+
+// Pobieranie danych sprzedaży
+export const fetchSalesData = async (month: string, year: string): Promise<SalesData[]> => {
+    try {
+        const response = await axios.get('http://localhost:5069/api/Sales');
+        const filteredSales = response.data.filter((sale: any) => {
+            const saleDate = new Date(sale.saleDate);
+            const selectedDate = new Date(`${year}-${month}-01`);
+            return saleDate.getFullYear() === selectedDate.getFullYear() &&
+                saleDate.getMonth() === selectedDate.getMonth();
+        });
+
+        return filteredSales.map((sale: any) => ({
+            saleID: sale.saleID,
+            saleDate: sale.saleDate,
+            totalNetAmount: sale.totalNetAmount,
+            totalVATAmount: sale.totalVATAmount,
+            totalGrossAmount: sale.totalGrossAmount,
+            saleStatus: sale.saleStatus,
+            clientName: sale.clientName,
+            clientNIP: sale.clientNIP,
+            clientRegon: sale.clientRegon,
+        }));
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+        return [];
+    }
+};
+
+// Dane do wykresu kołowego dla sprzedaży (statusy)
+export const processSalesPieChartData = (sales: SalesData[]) => {
+    const statusCount: { [key: string]: number } = {};
+    sales.forEach((sale) => {
+        const status = sale.saleStatus || 'Unknown';
+        statusCount[status] = (statusCount[status] || 0) + 1;
+    });
+
+    return {
+        labels: Object.keys(statusCount),
+        datasets: [
+            {
+                data: Object.values(statusCount),
+                backgroundColor: ['#034C8C', '#356fa3', '#6793ba', '#012646'],
+                borderColor: '#FFFFFF',
+                borderWidth: 1,
+            },
+        ],
+    };
+};
+
+// Dane do wykresu liniowego dla sprzedaży w czasie
+export const processSalesLineChartData = (sales: SalesData[]) => {
+    const salesByDate: { [key: string]: number } = {};
+    sales.forEach((sale) => {
+        const date = sale.saleDate.split('T')[0]; // Tylko data bez godziny
+        salesByDate[date] = (salesByDate[date] || 0) + (sale.totalGrossAmount || 0);
+    });
+
+    return {
+        labels: Object.keys(salesByDate).sort(),
+        datasets: [
+            {
+                label: 'Sales Over Time',
+                data: Object.values(salesByDate),
+                backgroundColor: '#6793ba',
+                borderColor: '#034C8C',
+                fill: false,
+                tension: 0.1,
+            },
+        ],
     };
 };

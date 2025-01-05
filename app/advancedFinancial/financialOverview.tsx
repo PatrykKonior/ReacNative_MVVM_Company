@@ -11,9 +11,13 @@ import RNPickerSelect from 'react-native-picker-select';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement } from 'chart.js';
 import { FontAwesome5 } from '@expo/vector-icons';
 import ProjectsCharts from "@/components/financial/Charts/ProjectsChart";
+import SalesCharts from "@/components/financial/Charts/SalesChart";
 import ProjectsOverview from "@/components/financial/Overviews/ProjectsOverview";
+import SalesOverview from "@/components/financial/Overviews/SalesOverview";
 import { fetchProjectsData } from "@/components/financial/Functions/dataProcessing";
+import { fetchSalesData } from "@/components/financial/Functions/dataProcessing";
 import { processOverviewData, OverviewData } from "@/components/financial/Functions/dataProjectsOverviewProcessing"
+import { processSalesOverviewData } from "@/components/financial/Functions/dataSalesOverviewProcessing";
 
 // Rejestracja komponentów Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
@@ -22,7 +26,8 @@ export default function FinancialOverview() {
     const [selectedCategory, setSelectedCategory] = useState('Projects'); // Domyślna kategoria
     const [selectedMonth, setSelectedMonth] = useState('1'); // Domyślny miesiąc
     const [selectedYear, setSelectedYear] = useState('2024'); // Domyślny rok
-    const [overviewData, setOverviewData] = useState<OverviewData | null>(null); // Typ danych podsumowania
+    const [overviewData, setOverviewData] = useState<OverviewData | null>(null); // Projects
+    const [salesOverviewData, setSalesOverviewData] = useState<any | null>(null); // Sales
     const [loading, setLoading] = useState(false);
 
     // Funkcja do pobrania danych na podstawie daty
@@ -39,10 +44,26 @@ export default function FinancialOverview() {
         }
     };
 
+    // Funkcja do pobrania danych dla Sales
+    const loadSalesOverviewData = async () => {
+        setLoading(true);
+        try {
+            const sales = await fetchSalesData(selectedMonth, selectedYear);
+            const processedData = processSalesOverviewData(sales);
+            setSalesOverviewData(processedData);
+        } catch (error) {
+            console.error('Error loading sales data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Efekt dla załadowania danych po zmianie daty lub kategorii
     useEffect(() => {
         if (selectedCategory === 'Projects') {
             loadOverviewData();
+        } else if (selectedCategory === 'Sales') {
+            loadSalesOverviewData();
         }
     }, [selectedMonth, selectedYear, selectedCategory]);
 
@@ -100,6 +121,17 @@ export default function FinancialOverview() {
                         <ActivityIndicator size="large" color="#034C8C" />
                     ) : (
                         overviewData && <ProjectsOverview overviewData={overviewData} />
+                    )}
+                </>
+            )}
+            {/* Wykresy i podsumowanie dla Sales */}
+            {selectedCategory === 'Sales' && (
+                <>
+                    <SalesCharts month={selectedMonth} year={selectedYear} />
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#034C8C" />
+                    ) : (
+                        salesOverviewData && <SalesOverview overviewData={salesOverviewData} />
                     )}
                 </>
             )}
