@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement } from 'chart.js';
 import { FontAwesome5 } from '@expo/vector-icons';
 import ProjectsCharts from "@/components/financial/Charts/ProjectsChart";
+import ProjectsOverview from "@/components/financial/Overviews/ProjectsOverview";
+import { fetchProjectsData } from "@/components/financial/Functions/dataProcessing";
+import { processOverviewData, OverviewData } from "@/components/financial/Functions/dataProjectsOverviewProcessing"
 
 // Rejestracja komponentów Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
@@ -18,6 +22,29 @@ export default function FinancialOverview() {
     const [selectedCategory, setSelectedCategory] = useState('Projects'); // Domyślna kategoria
     const [selectedMonth, setSelectedMonth] = useState('1'); // Domyślny miesiąc
     const [selectedYear, setSelectedYear] = useState('2024'); // Domyślny rok
+    const [overviewData, setOverviewData] = useState<OverviewData | null>(null); // Typ danych podsumowania
+    const [loading, setLoading] = useState(false);
+
+    // Funkcja do pobrania danych na podstawie daty
+    const loadOverviewData = async () => {
+        setLoading(true);
+        try {
+            const projects = await fetchProjectsData(selectedMonth, selectedYear);
+            const processedData = processOverviewData(projects); // Przetwarzanie danych
+            setOverviewData(processedData); // Ustawienie przetworzonych danych
+        } catch (error) {
+            console.error('Error loading overview data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Efekt dla załadowania danych po zmianie daty lub kategorii
+    useEffect(() => {
+        if (selectedCategory === 'Projects') {
+            loadOverviewData();
+        }
+    }, [selectedMonth, selectedYear, selectedCategory]);
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -65,43 +92,17 @@ export default function FinancialOverview() {
                 </View>
             </View>
 
-            {/* Wykresy dla Projects */}
+            {/* Wykresy i podsumowanie dla Projects */}
             {selectedCategory === 'Projects' && (
-                <ProjectsCharts month={selectedMonth} year={selectedYear} />
+                <>
+                    <ProjectsCharts month={selectedMonth} year={selectedYear} />
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#034C8C" />
+                    ) : (
+                        overviewData && <ProjectsOverview overviewData={overviewData} />
+                    )}
+                </>
             )}
-
-
-            {/* Podsumowanie */}
-            <View style={styles.overviewContainer}>
-                <Text style={styles.overviewTitle}>Overview</Text>
-                <View style={styles.overviewContent}>
-                    <View style={styles.overviewColumn}>
-                        <View style={styles.detailsRow}>
-                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                            <Text style={styles.detailsRowText}>Materials:</Text>
-                            <Text style={styles.amountText}>$5000</Text>
-                        </View>
-                        <View style={styles.detailsRow}>
-                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                            <Text style={styles.detailsRowText}>Salaries:</Text>
-                            <Text style={styles.amountText}>$7000</Text>
-                        </View>
-                    </View>
-                    <View style={styles.overviewColumn}>
-                        <View style={styles.detailsRow}>
-                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                            <Text style={styles.detailsRowText}>Utilities:</Text>
-                            <Text style={styles.amountText}>$2000</Text>
-                        </View>
-                        <View style={styles.detailsRow}>
-                            <FontAwesome5 name="circle" size={12} color="#FFFFFF" style={{ marginRight: 8 }} />
-                            <Text style={styles.detailsRowText}>Misc:</Text>
-                            <Text style={styles.amountText}>$1500</Text>
-                        </View>
-                    </View>
-                </View>
-                <Text style={styles.totalText}>Total: $15500</Text>
-            </View>
         </ScrollView>
     );
 }
