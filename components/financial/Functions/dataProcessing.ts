@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Interfejs dla danych projektów
 export interface ProjectData {
     projectName: string;
     projectType: string;
@@ -10,7 +9,6 @@ export interface ProjectData {
     projectEndDate: string;
 }
 
-// Interfejs dla danych sprzedaży
 export interface SalesData {
     saleID: number;
     saleDate: string;
@@ -23,13 +21,21 @@ export interface SalesData {
     clientRegon: string;
 }
 
-// Interfejs dla danych płatności
 export interface PaymentsData {
     paymentID: number;
     paymentDate: string;
     paymentAmount: number | null;
     paymentMethod: string;
     invoiceDate: string;
+    invoiceStatus: string;
+    totalAmount: number;
+}
+
+export interface InvoicesData {
+    invoiceID: number;
+    saleID: number;
+    invoiceDate: string;
+    paymentDueDate: string;
     invoiceStatus: string;
     totalAmount: number;
 }
@@ -283,5 +289,80 @@ export const processPaymentsBarChartData = (payments: PaymentsData[]) => {
             },
         ],
         tooltipData: methodDetails, // Dodano tooltipData
+    };
+};
+
+// INVOICES
+
+// Pobieranie danych faktur z API
+export const fetchInvoicesData = async (month: string, year: string): Promise<InvoicesData[]> => {
+    try {
+        const response = await axios.get('http://localhost:5069/api/Invoices');
+        return response.data.filter((invoice: any) => {
+            const invoiceDate = new Date(invoice.invoiceDate);
+            const selectedDate = new Date(`${year}-${month}-01`);
+            return (
+                invoiceDate.getFullYear() === selectedDate.getFullYear() &&
+                invoiceDate.getMonth() === selectedDate.getMonth()
+            );
+        });
+    } catch (error) {
+        console.error('Error fetching invoices data:', error);
+        return [];
+    }
+};
+
+// Dane do wykresu kołowego - statusy faktur
+export const processInvoicesPieChartData = (invoices: InvoicesData[]) => {
+    const statusCounts: { [key: string]: number } = {};
+
+    invoices.forEach((invoice) => {
+        const status = invoice.invoiceStatus || 'Unknown'; // Domyślny status
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    return {
+        labels: Object.keys(statusCounts),
+        datasets: [
+            {
+                data: Object.values(statusCounts),
+                backgroundColor: ['#034C8C', '#356fa3', '#6793ba', '#012646'],
+                borderColor: '#FFFFFF',
+                borderWidth: 1,
+            },
+        ],
+    };
+};
+
+// Dane do wykresu słupkowego - zapłacone vs nieopłacone kwoty
+export const processInvoicesBarChartData = (invoices: InvoicesData[]) => {
+    const statusAmounts: { [key: string]: number } = {};
+    const statusDetails: { [key: string]: string[] } = {}; // Szczegóły dla tooltipów
+
+    invoices.forEach((invoice) => {
+        const status = invoice.invoiceStatus || 'Unknown';
+        const amount = invoice.totalAmount || 0;
+
+        // Zliczanie kwot według statusu
+        statusAmounts[status] = (statusAmounts[status] || 0) + amount;
+
+        // Szczegóły do tooltipów
+        if (!statusDetails[status]) {
+            statusDetails[status] = [];
+        }
+        statusDetails[status].push(`Invoice ID ${invoice.invoiceID}: $${amount.toFixed(2)}`);
+    });
+
+    return {
+        labels: Object.keys(statusAmounts),
+        datasets: [
+            {
+                data: Object.values(statusAmounts),
+                backgroundColor: ['#034C8C', '#356fa3', '#6793ba'],
+                borderColor: '#FFFFFF',
+                borderWidth: 1,
+            },
+        ],
+        tooltipData: statusDetails,
     };
 };

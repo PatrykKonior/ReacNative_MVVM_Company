@@ -72,7 +72,7 @@ export default function PaymentsChart({ month, year }: PaymentsChartProps) {
                 <Text style={styles.paymentsInfoTitle}>Payments in this period:</Text>
                 {paymentsInfo.map((payment, index) => (
                     <Text key={index} style={styles.paymentDetails}>
-                        • {payment.method} - ${payment.amount} (Date: {payment.date})
+                        • {payment.method} - ${payment.amount} (Date: {payment.date ? payment.date.split('T')[0] : 'N/A'})
                     </Text>
                 ))}
             </View>

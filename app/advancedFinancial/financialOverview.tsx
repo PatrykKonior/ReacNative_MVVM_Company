@@ -13,15 +13,19 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import ProjectsCharts from "@/components/financial/Charts/ProjectsChart";
 import SalesCharts from "@/components/financial/Charts/SalesChart";
 import PaymentsChart from "@/components/financial/Charts/PaymentsChart";
+import InvoicesChart from "@/components/financial/Charts/InvoicesChart";
 import ProjectsOverview from "@/components/financial/Overviews/ProjectsOverview";
 import SalesOverview from "@/components/financial/Overviews/SalesOverview";
 import PaymentsOverview from "@/components/financial/Overviews/PaymentsOverview";
+import InvoicesOverview from "@/components/financial/Overviews/InvoicesOverview";
 import { fetchProjectsData } from "@/components/financial/Functions/dataProcessing";
 import { fetchSalesData } from "@/components/financial/Functions/dataProcessing";
 import { fetchPaymentsData } from "@/components/financial/Functions/dataProcessing";
+import { fetchInvoicesData } from "@/components/financial/Functions/dataProcessing";
 import { processOverviewData, OverviewData } from "@/components/financial/Functions/dataProjectsOverviewProcessing"
 import { processSalesOverviewData } from "@/components/financial/Functions/dataSalesOverviewProcessing";
 import { processPaymentsOverviewData } from "@/components/financial/Functions/dataPaymentsOverviewProcessing";
+import { processInvoicesOverviewData } from "@/components/financial/Functions/dataInvoicesOverviewProcessing";
 
 // Rejestracja komponentów Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
@@ -33,6 +37,7 @@ export default function FinancialOverview() {
     const [overviewData, setOverviewData] = useState<OverviewData | null>(null); // Projects
     const [salesOverviewData, setSalesOverviewData] = useState<any | null>(null); // Sales
     const [paymentsOverviewData, setPaymentsOverviewData] = useState<any | null>(null); // Payments
+    const [invoicesOverviewData, setInvoicesOverviewData] = useState<any | null>(null); // Invoices
     const [loading, setLoading] = useState(false);
 
     // Funkcja do pobrania danych na podstawie daty
@@ -77,6 +82,20 @@ export default function FinancialOverview() {
         }
     };
 
+    // Funkcja do pobrania danych dla Invoices
+    const loadInvoicesOverviewData = async () => {
+        setLoading(true);
+        try {
+            const invoices = await fetchInvoicesData(selectedMonth, selectedYear);
+            const processedData = processInvoicesOverviewData(invoices);
+            setInvoicesOverviewData(processedData);
+        } catch (error) {
+            console.error('Error loading invoices data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Efekt dla załadowania danych po zmianie daty lub kategorii
     useEffect(() => {
         if (selectedCategory === 'Projects') {
@@ -85,8 +104,11 @@ export default function FinancialOverview() {
             loadSalesOverviewData();
         } else if (selectedCategory === 'Payments') {
             loadPaymentsOverviewData();
+        } else if (selectedCategory === 'Invoices') {
+            loadInvoicesOverviewData();
         }
     }, [selectedMonth, selectedYear, selectedCategory]);
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -164,6 +186,16 @@ export default function FinancialOverview() {
                         <ActivityIndicator size="large" color="#034C8C" />
                     ) : (
                         paymentsOverviewData && <PaymentsOverview overviewData={paymentsOverviewData} />
+                    )}
+                </>
+            )}
+            {selectedCategory === 'Invoices' && (
+                <>
+                    <InvoicesChart month={selectedMonth} year={selectedYear} />
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#034C8C" />
+                    ) : (
+                        invoicesOverviewData && <InvoicesOverview overviewData={invoicesOverviewData} />
                     )}
                 </>
             )}
