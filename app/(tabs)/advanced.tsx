@@ -26,6 +26,7 @@ const advancedFunctions = [
         description: 'Organize and prioritize tasks effectively.',
         renderIcon: () => <FontAwesome5 name="tasks" size={24} color="#FFFFFF" />,
         backgroundColor: '#023059',
+        route: '/advancedTaskPrioritization/taskPrioritization',
     },
 ];
 
