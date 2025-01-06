@@ -12,12 +12,16 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { FontAwesome5 } from '@expo/vector-icons';
 import ProjectsCharts from "@/components/financial/Charts/ProjectsChart";
 import SalesCharts from "@/components/financial/Charts/SalesChart";
+import PaymentsChart from "@/components/financial/Charts/PaymentsChart";
 import ProjectsOverview from "@/components/financial/Overviews/ProjectsOverview";
 import SalesOverview from "@/components/financial/Overviews/SalesOverview";
+import PaymentsOverview from "@/components/financial/Overviews/PaymentsOverview";
 import { fetchProjectsData } from "@/components/financial/Functions/dataProcessing";
 import { fetchSalesData } from "@/components/financial/Functions/dataProcessing";
+import { fetchPaymentsData } from "@/components/financial/Functions/dataProcessing";
 import { processOverviewData, OverviewData } from "@/components/financial/Functions/dataProjectsOverviewProcessing"
 import { processSalesOverviewData } from "@/components/financial/Functions/dataSalesOverviewProcessing";
+import { processPaymentsOverviewData } from "@/components/financial/Functions/dataPaymentsOverviewProcessing";
 
 // Rejestracja komponentów Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement);
@@ -28,6 +32,7 @@ export default function FinancialOverview() {
     const [selectedYear, setSelectedYear] = useState('2024'); // Domyślny rok
     const [overviewData, setOverviewData] = useState<OverviewData | null>(null); // Projects
     const [salesOverviewData, setSalesOverviewData] = useState<any | null>(null); // Sales
+    const [paymentsOverviewData, setPaymentsOverviewData] = useState<any | null>(null); // Payments
     const [loading, setLoading] = useState(false);
 
     // Funkcja do pobrania danych na podstawie daty
@@ -58,12 +63,28 @@ export default function FinancialOverview() {
         }
     };
 
+    // Funkcja do pobrania danych dla Payments
+    const loadPaymentsOverviewData = async () => {
+        setLoading(true);
+        try {
+            const payments = await fetchPaymentsData(selectedMonth, selectedYear);
+            const processedData = processPaymentsOverviewData(payments); // Przetwarzanie danych
+            setPaymentsOverviewData(processedData); // Ustawienie przetworzonych danych
+        } catch (error) {
+            console.error('Error loading payments data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Efekt dla załadowania danych po zmianie daty lub kategorii
     useEffect(() => {
         if (selectedCategory === 'Projects') {
             loadOverviewData();
         } else if (selectedCategory === 'Sales') {
             loadSalesOverviewData();
+        } else if (selectedCategory === 'Payments') {
+            loadPaymentsOverviewData();
         }
     }, [selectedMonth, selectedYear, selectedCategory]);
 
@@ -132,6 +153,17 @@ export default function FinancialOverview() {
                         <ActivityIndicator size="large" color="#034C8C" />
                     ) : (
                         salesOverviewData && <SalesOverview overviewData={salesOverviewData} />
+                    )}
+                </>
+            )}
+            {/* Wykresy i podsumowanie dla Payments */}
+            {selectedCategory === 'Payments' && (
+                <>
+                    <PaymentsChart month={selectedMonth} year={selectedYear} />
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#034C8C" />
+                    ) : (
+                        paymentsOverviewData && <PaymentsOverview overviewData={paymentsOverviewData} />
                     )}
                 </>
             )}

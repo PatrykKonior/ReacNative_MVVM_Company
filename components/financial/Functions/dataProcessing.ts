@@ -23,6 +23,17 @@ export interface SalesData {
     clientRegon: string;
 }
 
+// Interfejs dla danych płatności
+export interface PaymentsData {
+    paymentID: number;
+    paymentDate: string;
+    paymentAmount: number | null;
+    paymentMethod: string;
+    invoiceDate: string;
+    invoiceStatus: string;
+    totalAmount: number;
+}
+
 // PROJEKTY
 
 // Funkcja pobierająca dane z API i filtrująca według miesiąca i roku
@@ -188,5 +199,89 @@ export const processSalesLineChartData = (sales: SalesData[]) => {
                 tension: 0.1,
             },
         ],
+    };
+};
+
+// PAYMENTS
+
+// Pobieranie danych płatności
+export const fetchPaymentsData = async (month: string, year: string): Promise<PaymentsData[]> => {
+    try {
+        const response = await axios.get('http://localhost:5069/api/Payments');
+        return response.data.filter((payment: any) => {
+            const paymentDate = new Date(payment.paymentDate);
+            const selectedDate = new Date(`${year}-${month}-01`);
+            return paymentDate.getFullYear() === selectedDate.getFullYear() &&
+                paymentDate.getMonth() === selectedDate.getMonth();
+        });
+    } catch (error) {
+        console.error('Error fetching payments data:', error);
+        return [];
+    }
+};
+
+// Dane do wykresu kołowego - metody płatności (kwoty)
+export const processPaymentsPieChartData = (payments: PaymentsData[]) => {
+    // Grupowanie według metody płatności
+    const methodTotals: { [key: string]: number } = {};
+
+    payments.forEach((payment) => {
+        const method = payment.paymentMethod || 'Unknown'; // Domyślna wartość
+        const amount = payment.paymentAmount || 0; // Obsługa null
+
+        if (methodTotals[method]) {
+            methodTotals[method] += amount;
+        } else {
+            methodTotals[method] = amount;
+        }
+    });
+
+    // Tworzenie danych do wykresu
+    const labels = Object.keys(methodTotals);
+    const data = Object.values(methodTotals);
+
+    return {
+        labels,
+        datasets: [
+            {
+                data,
+                backgroundColor: ['#034C8C', '#356fa3', '#6793ba', '#012646'],
+                borderColor: '#FFFFFF',
+                borderWidth: 1,
+            },
+        ],
+    };
+};
+
+// Dane do wykresu słupkowego - liczba płatności według metod
+export const processPaymentsBarChartData = (payments: PaymentsData[]) => {
+    const methodCounts: { [key: string]: number } = {};
+    const methodDetails: { [key: string]: string[] } = {}; // Szczegóły dla tooltipów
+
+    payments.forEach((payment) => {
+        const method = payment.paymentMethod || 'Unknown';
+        const amount = payment.paymentAmount || 0;
+
+        // Zliczanie metod płatności
+        methodCounts[method] = (methodCounts[method] || 0) + 1;
+
+        // Szczegóły do tooltipów
+        if (!methodDetails[method]) {
+            methodDetails[method] = [];
+        }
+        methodDetails[method].push(`$${amount.toFixed(2)}`);
+    });
+
+    return {
+        labels: Object.keys(methodCounts),
+        datasets: [
+            {
+                data: Object.values(methodCounts),
+                backgroundColor: ['#034C8C', '#356fa3', '#6793ba'],
+                borderColor: '#FFFFFF',
+                borderWidth: 1,
+            },
+        ],
+        tooltipData: methodDetails, // Dodano tooltipData
     };
 };
