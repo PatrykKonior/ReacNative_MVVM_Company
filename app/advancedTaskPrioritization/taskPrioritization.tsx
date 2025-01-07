@@ -149,13 +149,27 @@ export default function TaskPrioritization() {
                                     : 'Long Term (>30 days)'}
                         </Text>
                         {tasks.map((task, index) => (
-                            <View key={index} style={styles.taskContainer}>
-                                <FontAwesome5 name="tasks" size={16} color="#023059" style={{ marginRight: 10 }} />
-                                <View>
-                                    <Text style={styles.taskTitle}>{task.title}</Text>
-                                    <Text style={styles.taskSubtitle}>{task.hours}h</Text>
-                                    <Text style={styles.taskSubtitle}>{task.status}</Text>
-                                    <Text style={styles.taskSubtitle}>{task.assigned}</Text>
+                            <View key={index} style={styles.taskRow}>
+                                {/* Wiersz 1: Tytuł i godziny */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}> {/* Zwiększony odstęp między wierszami */}
+                                    <FontAwesome5 name="tasks" size={18} color="#023059" style={[styles.icon, { marginRight: 10 }]} /> {/* Zwiększona ikona i odstęp */}
+                                    <Text style={[styles.taskText, { marginRight: 5 }]}>Title:</Text> {/* Zwiększony odstęp między taskText a value */}
+                                    <Text style={styles.taskValue}>{task.title}</Text>
+                                    <View style={{ marginLeft: 30 }} /> {/* Zwiększony odstęp między zestawami */}
+                                    <MaterialIcons name="schedule" size={18} color="#023059" style={[styles.icon, { marginRight: 10 }]} />
+                                    <Text style={[styles.taskText, { marginRight: 5 }]}>Hours:</Text>
+                                    <Text style={styles.taskValue}>{task.hours}h</Text>
+                                </View>
+
+                                {/* Wiersz 2: Status i przypisany pracownik */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}> {/* Zwiększony odstęp między wierszami */}
+                                    <MaterialIcons name="info" size={18} color="#023059" style={[styles.icon, { marginRight: 10 }]} />
+                                    <Text style={[styles.taskText, { marginRight: 5 }]}>Status:</Text>
+                                    <Text style={styles.taskValue}>{task.status}</Text>
+                                    <View style={{ marginLeft: 30 }} /> {/* Zwiększony odstęp między zestawami */}
+                                    <MaterialIcons name="person" size={18} color="#023059" style={[styles.icon, { marginRight: 10 }]} />
+                                    <Text style={[styles.taskText, { marginRight: 5 }]}>Assigned:</Text>
+                                    <Text style={styles.taskValue}>{task.assigned}</Text>
                                 </View>
                             </View>
                         ))}
@@ -166,15 +180,18 @@ export default function TaskPrioritization() {
             {/* Analytics */}
             <Text style={styles.analysisTitle}>Analytics</Text>
             <View style={styles.analysisContainer}>
-                <Text style={styles.analysisItem}>
-                    <FontAwesome5 name="clock" size={16} color="#011a34" /> Avg Duration: {analytics.averageDuration}h
-                </Text>
-                <Text style={styles.analysisItem}>
-                    <FontAwesome5 name="arrow-up" size={16} color="#011a34" /> Longest Task: {analytics.longestTask.name} ({analytics.longestTask.hours}h)
-                </Text>
-                <Text style={styles.analysisItem}>
-                    <FontAwesome5 name="arrow-down" size={16} color="#011a34" /> Shortest Task: {analytics.shortestTask.name} ({analytics.shortestTask.hours}h)
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft:10 }}>
+                    <FontAwesome5 name="clock" size={18} color="#011a34" style={[styles.icon, { marginRight: 25, marginTop: -5 }]} />
+                    <Text style={[styles.analysisItem, { fontSize: 14 }]}>Avg Duration: {analytics.averageDuration}h</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginLeft:10 }}>
+                    <FontAwesome5 name="arrow-up" size={18} color="#011a34" style={[styles.icon, { marginRight: 25, marginTop: -5 }]} />
+                    <Text style={[styles.analysisItem, { fontSize: 14 }]}>Longest Task: {analytics.longestTask.name} ({analytics.longestTask.hours}h)</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft:10 }}>
+                    <FontAwesome5 name="arrow-down" size={18} color="#011a34" style={[styles.icon, { marginRight: 25, marginTop: -5 }]} />
+                    <Text style={[styles.analysisItem, { fontSize: 14 }]}>Shortest Task: {analytics.shortestTask.name} ({analytics.shortestTask.hours}h)</Text>
+                </View>
             </View>
         </ScrollView>
     );
@@ -229,18 +246,26 @@ const styles = StyleSheet.create({
         backgroundColor: '#023059', // Najciemniejszy odcień dla długoterminowych
     },
     taskRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: 'column', // Zmiana na kolumnę, aby były dwa wiersze
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
         padding: 10,
         marginBottom: 5,
         borderRadius: 8,
-        backgroundColor: 'rgba(202,198,198,0.68)', // Tło dla pojedynczego zadania
+        backgroundColor: 'rgba(202,198,198,0.68)', // Istniejące tło
     },
     taskText: {
-        fontSize: 14,
+        fontSize: 15, // Poprawiony rozmiar
         fontWeight: '500',
-        color: '#FFFFFF', // Biały tekst dla kontrastu
+        color: '#FFFFFF', // Kolor tekstu
+    },
+    taskValue: {
+        fontSize: 15, // Poprawiony rozmiar
+        color: '#FFFFFF',
+        fontWeight: 'bold', // Pogrubienie dla wartości
+    },
+    icon: {
+        marginRight: 10, // Poprawiony odstęp
     },
     groupTitle: {
         fontSize: 16,
@@ -280,6 +305,7 @@ const styles = StyleSheet.create({
     analysisItem: {
         fontSize: 16,
         color: '#FFFFFF',
+        marginTop: 5,
         marginBottom: 10,
         flexDirection: 'row',
         alignItems: 'center',
