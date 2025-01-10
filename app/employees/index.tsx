@@ -14,6 +14,11 @@ export default function EmployeesIndex() {
             <TouchableOpacity style={styles.button} onPress={() => router.push('/employees/viewAllEmployees')}>
                 <Text style={styles.buttonText}>View All Employees</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => router.push('/employees/viewemployeeprojects')}>
+                <Text style={styles.buttonText}>View Employee Projects</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -33,11 +38,14 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     button: {
+        width: '80%',
+        maxWidth: 300,
         backgroundColor: '#465954',
         paddingVertical: 15,
         paddingHorizontal: 30,
         borderRadius: 8,
         marginVertical: 10,
+        alignItems: 'center',
     },
     buttonText: {
         color: '#FFFFFF',
